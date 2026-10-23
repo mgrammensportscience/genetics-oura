@@ -7,186 +7,65 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: #edeae3;
-      font-family: 'Inter', sans-serif;
-      color: #1a1a1a;
-      font-size: 14px;
+    body { background: #edeae3; font-family: 'Inter', sans-serif; color: #1a1a1a; font-size: 14px; }
+    .app-header { background: white; border-bottom: 1px solid #ddd; padding: 16px 28px; }
+    .header-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: #c0392b; margin-bottom: 4px; }
+    h1 { font-size: 22px; font-weight: 800; color: #1a1a1a; }
+    .header-sub { font-size: 12px; color: #888; margin-top: 2px; }
+    .app-body { display: flex; height: calc(100vh - 72px); }
+    .left-panel { width: 300px; background: white; border-right: 1px solid #ddd; padding: 20px; overflow-y: auto; flex-shrink: 0; }
+    .right-panel { flex: 1; padding: 24px; overflow-y: auto; }
+    .section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #888; margin-bottom: 14px; }
+    .divider { border: none; border-top: 1px solid #eee; margin: 18px 0; }
+    .input-group { margin-bottom: 14px; }
+    .input-group label { display: block; font-size: 11px; font-weight: 600; color: #555; margin-bottom: 5px; }
+    .input-group select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 13px; color: #1a1a1a; appearance: none; }
+    .input-group input[type="password"],
+    .input-group input[type="text"] {
+      width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;
+      background: white; font-size: 12px; color: #1a1a1a; font-family: monospace;
     }
-
-    .app-header {
-      background: white;
-      border-bottom: 1px solid #ddd;
-      padding: 16px 28px;
-    }
-
-    .header-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      color: #c0392b;
-      margin-bottom: 4px;
-    }
-
-    h1 {
-      font-size: 22px;
-      font-weight: 800;
-      color: #1a1a1a;
-    }
-
-    .header-sub {
-      font-size: 12px;
-      color: #888;
-      margin-top: 2px;
-    }
-
-    .app-body {
-      display: flex;
-      height: calc(100vh - 72px);
-    }
-
-    .left-panel {
-      width: 300px;
-      background: white;
-      border-right: 1px solid #ddd;
-      padding: 20px;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-
-    .right-panel {
-      flex: 1;
-      padding: 24px;
-      overflow-y: auto;
-    }
-
-    .section-title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: #888;
-      margin-bottom: 14px;
-    }
-
-    .input-group {
-      margin-bottom: 14px;
-    }
-
-    .input-group label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      color: #555;
-      margin-bottom: 5px;
-    }
-
-    .input-group select {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: white;
-      font-size: 13px;
-      color: #1a1a1a;
-      appearance: none;
-    }
-
-    .analyze-btn {
-      width: 100%;
-      margin-top: 10px;
-      padding: 11px;
-      background: #c0392b;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.04em;
-    }
-
+    .input-group input::placeholder { color: #bbb; }
+    .token-hint { font-size: 10px; color: #aaa; margin-top: 4px; line-height: 1.4; }
+    .analyze-btn { width: 100%; margin-top: 10px; padding: 11px; background: #c0392b; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.04em; }
     .analyze-btn:hover { background: #a93226; }
-
-    .tiles-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .tile {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 20px;
-    }
-
-    .tile-dark {
-      background: #1a1a1a;
-      border-color: #1a1a1a;
-      color: white;
-    }
-
-    .tile-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: #888;
-      margin-bottom: 10px;
-    }
-
+    .analyze-btn:disabled { background: #e0a09a; cursor: not-allowed; }
+    .status-msg { font-size: 11px; color: #888; margin-top: 10px; text-align: center; min-height: 16px; }
+    .status-msg.error { color: #c0392b; }
+    .status-msg.success { color: #27ae60; }
+    .tiles-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .tile { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; }
+    .tile-dark { background: #1a1a1a; border-color: #1a1a1a; color: white; }
+    .tile-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #888; margin-bottom: 10px; }
     .tile-dark .tile-label { color: #aaa; }
-
-    .tile-value {
-      font-size: 36px;
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-
-    .tile-unit {
-      font-size: 16px;
-      font-weight: 500;
-      color: #888;
-    }
-
+    .tile-value { font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+    .tile-unit { font-size: 16px; font-weight: 500; color: #888; }
     .tile-accent { color: #c0392b; }
-
     .tile-sub { font-size: 11px; color: #888; }
     .tile-dark .tile-sub { color: #777; }
-
-    .chart-card {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 20px;
-    }
-
-    .chart-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .chart-sub {
-      font-size: 11px;
-      color: #888;
-      margin-bottom: 16px;
-    }
+    .chart-card { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .chart-sub { font-size: 11px; color: #888; margin-bottom: 16px; }
+    .live-badge { display: inline-block; background: #27ae60; color: white; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 6px; border-radius: 3px; margin-left: 8px; vertical-align: middle; }
   </style>
 </head>
 <body>
-
 <div class="app">
   <header class="app-header">
     <div class="header-label">GENETICS LAB</div>
     <h1>Genotype vs Phenotype Analyzer</h1>
     <p class="header-sub">by Maria Grammenou</p>
   </header>
-
   <div class="app-body">
     <aside class="left-panel">
+      <div class="section-title">OURA RING CONNECTION</div>
+      <div class="input-group">
+        <label>Personal Access Token</label>
+        <input type="password" id="oura-token" placeholder="Paste your token here" autocomplete="off" />
+        <div class="token-hint">Get yours at cloud.ouraring.com → Personal Access Tokens. Never shared.</div>
+      </div>
+
+      <hr class="divider">
       <div class="section-title">GENETIC PROFILE</div>
 
       <div class="input-group">
@@ -197,7 +76,6 @@
           <option value="advantage">Advantage</option>
         </select>
       </div>
-
       <div class="input-group">
         <label>Chronotype</label>
         <select id="g-chronotype">
@@ -206,7 +84,6 @@
           <option value="morning">Morning lark</option>
         </select>
       </div>
-
       <div class="input-group">
         <label>HRV potential</label>
         <select id="g-hrv">
@@ -215,7 +92,6 @@
           <option value="advantage">Advantage</option>
         </select>
       </div>
-
       <div class="input-group">
         <label>Cortisol reactivity</label>
         <select id="g-cortisol">
@@ -224,21 +100,21 @@
           <option value="low">Low</option>
         </select>
       </div>
-
-      <button class="analyze-btn" onclick="analyze()">Analyze →</button>
+      <button class="analyze-btn" id="analyze-btn" onclick="analyze()">Analyze →</button>
+      <div class="status-msg" id="status-msg"></div>
     </aside>
 
     <main class="right-panel">
       <div class="tiles-row">
         <div class="tile tile-dark">
           <div class="tile-label">PREDICTED DEEP SLEEP</div>
-          <div class="tile-value" id="tile-sleep">75 <span class="tile-unit">min</span></div>
+          <div class="tile-value" id="tile-sleep-pred">75 <span class="tile-unit">min</span></div>
           <div class="tile-sub">based on your genetics</div>
         </div>
         <div class="tile">
-          <div class="tile-label">PREDICTED HRV</div>
-          <div class="tile-value tile-accent" id="tile-hrv">53 <span class="tile-unit">ms</span></div>
-          <div class="tile-sub">RMSSD · genetic range</div>
+          <div class="tile-label">ACTUAL DEEP SLEEP</div>
+          <div class="tile-value tile-accent" id="tile-sleep-actual">— <span class="tile-unit">min</span></div>
+          <div class="tile-sub">last night · Oura Ring</div>
         </div>
         <div class="tile">
           <div class="tile-label">STRESS PROFILE</div>
@@ -246,92 +122,236 @@
           <div class="tile-sub">cortisol reactivity</div>
         </div>
       </div>
+      <div class="tiles-row">
+        <div class="tile">
+          <div class="tile-label">PREDICTED HRV RANGE</div>
+          <div class="tile-value" id="tile-hrv-pred">38–68 <span class="tile-unit" style="font-size:13px">ms</span></div>
+          <div class="tile-sub">genetic range · RMSSD</div>
+        </div>
+        <div class="tile tile-dark">
+          <div class="tile-label">ACTUAL HRV (LAST NIGHT)</div>
+          <div class="tile-value tile-accent" id="tile-hrv-actual">— <span class="tile-unit">ms</span></div>
+          <div class="tile-sub">RMSSD · Oura Ring</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">READINESS SCORE</div>
+          <div class="tile-value" id="tile-readiness">—</div>
+          <div class="tile-sub">Oura Ring · today</div>
+        </div>
+      </div>
 
       <div class="chart-card">
-        <div class="chart-title">HRV Trend — Genetic range vs your data</div>
+        <div class="chart-title">HRV Trend — Genetic range vs your data <span class="live-badge" id="live-badge" style="display:none">LIVE</span></div>
         <div class="chart-sub">Last 30 days · RMSSD (ms)</div>
         <canvas id="hrv-chart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Deep Sleep — Genetic prediction vs actual <span class="live-badge" id="sleep-badge" style="display:none">LIVE</span></div>
+        <div class="chart-sub">Last 30 days · minutes</div>
+        <canvas id="sleep-chart"></canvas>
       </div>
     </main>
   </div>
 </div>
 
 <script>
-  function analyze() {
-    const deepSleep = document.getElementById('g-deep-sleep').value;
-    const hrv       = document.getElementById('g-hrv').value;
-    const cortisol  = document.getElementById('g-cortisol').value;
+  // ── Genetic range lookup ──────────────────────────────────────────────────
+  const geneticRanges = {
+    hrv: { challenge: [20,45], typical: [38,68], advantage: [55,90] },
+    sleep: { challenge: [35,60], typical: [52,85], advantage: [75,110] }
+  };
 
-    const deepSleepMap = { challenge: 52, typical: 75, advantage: 98 };
-    const hrvMap       = { challenge: 32, typical: 53, advantage: 74 };
-    const cortisolMap  = { high: 'High', moderate: 'Moderate', low: 'Low' };
+  // ── Chart instances ───────────────────────────────────────────────────────
+  let hrvChart = null;
+  let sleepChart = null;
 
-    document.getElementById('tile-sleep').innerHTML =
-      deepSleepMap[deepSleep] + ' <span class="tile-unit">min</span>';
-    document.getElementById('tile-hrv').innerHTML =
-      hrvMap[hrv] + ' <span class="tile-unit">ms</span>';
-    document.getElementById('tile-stress').textContent =
-      cortisolMap[cortisol];
-  }
-
-  // Chart
-  const labels = [];
-  const actualHRV = [];
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
-    actualHRV.push(Math.round(45 + Math.sin(i / 5) * 8 + (Math.random() - 0.5) * 6));
-  }
-
-  new Chart(document.getElementById('hrv-chart'), {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Genetic upper range',
-          data: labels.map(() => 68),
-          borderColor: 'rgba(100,149,237,0.4)',
-          borderDash: [4, 3],
-          borderWidth: 1,
-          pointRadius: 0,
-          fill: '+1',
-          backgroundColor: 'rgba(100,149,237,0.08)'
-        },
-        {
-          label: 'Genetic lower range',
-          data: labels.map(() => 38),
-          borderColor: 'rgba(100,149,237,0.4)',
-          borderDash: [4, 3],
-          borderWidth: 1,
-          pointRadius: 0,
-          fill: false
-        },
-        {
-          label: 'Your HRV',
-          data: actualHRV,
-          borderColor: '#c0392b',
-          backgroundColor: 'rgba(192,57,43,0.06)',
-          borderWidth: 2,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          tension: 0.3,
-          fill: false
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 } } }
-      },
-      scales: {
-        x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
-        y: { min: 0, ticks: { font: { size: 10 } } }
-      }
+  function buildDemoLabels() {
+    const labels = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
     }
-  });
+    return labels;
+  }
+
+  function initCharts() {
+    const labels = buildDemoLabels();
+    const demoHRV = labels.map((_, i) => Math.round(45 + Math.sin(i / 5) * 8 + (Math.random() - 0.5) * 6));
+    const demoSleep = labels.map(() => Math.round(65 + (Math.random() - 0.5) * 20));
+
+    const [hrvLo, hrvHi] = geneticRanges.hrv.typical;
+    const [slLo, slHi] = geneticRanges.sleep.typical;
+
+    hrvChart = buildChart('hrv-chart', labels, demoHRV, hrvLo, hrvHi, 'RMSSD (ms)');
+    sleepChart = buildChart('sleep-chart', labels, demoSleep, slLo, slHi, 'Deep sleep (min)');
+  }
+
+  function buildChart(canvasId, labels, actual, lo, hi, yLabel) {
+    return new Chart(document.getElementById(canvasId), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Genetic upper range',
+            data: labels.map(() => hi),
+            borderColor: 'rgba(100,149,237,0.4)',
+            borderDash: [4, 3], borderWidth: 1, pointRadius: 0,
+            fill: '+1', backgroundColor: 'rgba(100,149,237,0.08)'
+          },
+          {
+            label: 'Genetic lower range',
+            data: labels.map(() => lo),
+            borderColor: 'rgba(100,149,237,0.4)',
+            borderDash: [4, 3], borderWidth: 1, pointRadius: 0,
+            fill: false
+          },
+          {
+            label: 'Your data',
+            data: actual,
+            borderColor: '#c0392b',
+            backgroundColor: 'rgba(192,57,43,0.06)',
+            borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
+            tension: 0.3, fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 } } },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+          y: { min: 0, ticks: { font: { size: 10 } }, title: { display: true, text: yLabel, font: { size: 10 }, color: '#aaa' } }
+        }
+      }
+    });
+  }
+
+  function updateChartRanges(chart, lo, hi) {
+    chart.data.datasets[0].data = chart.data.labels.map(() => hi);
+    chart.data.datasets[1].data = chart.data.labels.map(() => lo);
+    chart.update();
+  }
+
+  function updateChartData(chart, labels, actual) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = labels.map(() => chart.data.datasets[0].data[0]);
+    chart.data.datasets[1].data = labels.map(() => chart.data.datasets[1].data[0]);
+    chart.data.datasets[2].data = actual;
+    chart.update();
+  }
+
+  // ── Oura API fetch ────────────────────────────────────────────────────────
+  async function fetchOura(token, endpoint, params) {
+    const url = new URL(`https://api.ouraring.com/v2/usercollection/${endpoint}`);
+    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(`Oura API error ${res.status}: ${await res.text()}`);
+    return res.json();
+  }
+
+  function setStatus(msg, type = '') {
+    const el = document.getElementById('status-msg');
+    el.textContent = msg;
+    el.className = 'status-msg' + (type ? ' ' + type : '');
+  }
+
+  // ── Main analyze ──────────────────────────────────────────────────────────
+  async function analyze() {
+    const token = document.getElementById('oura-token').value.trim();
+    const deepSleep = document.getElementById('g-deep-sleep').value;
+    const hrv = document.getElementById('g-hrv').value;
+    const cortisol = document.getElementById('g-cortisol').value;
+
+    // Update genetic predictions
+    const [hrvLo, hrvHi] = geneticRanges.hrv[hrv];
+    const [slLo, slHi] = geneticRanges.sleep[deepSleep];
+    const slMid = Math.round((slLo + slHi) / 2);
+    const cortisolMap = { high: 'High', moderate: 'Moderate', low: 'Low' };
+
+    document.getElementById('tile-sleep-pred').innerHTML = slMid + ' <span class="tile-unit">min</span>';
+    document.getElementById('tile-hrv-pred').innerHTML = `${hrvLo}–${hrvHi} <span class="tile-unit" style="font-size:13px">ms</span>`;
+    document.getElementById('tile-stress').textContent = cortisolMap[cortisol];
+
+    updateChartRanges(hrvChart, hrvLo, hrvHi);
+    updateChartRanges(sleepChart, slLo, slHi);
+
+    // If no token, just show genetic predictions with demo data
+    if (!token) {
+      setStatus('Enter your Oura token to load real data');
+      return;
+    }
+
+    // Fetch real Oura data
+    const btn = document.getElementById('analyze-btn');
+    btn.disabled = true;
+    setStatus('Fetching Oura data…');
+
+    try {
+      const endDate = new Date().toISOString().slice(0, 10);
+      const startDate = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+
+      // Fetch sleep data (includes average_hrv and deep_sleep_duration)
+      const sleepData = await fetchOura(token, 'daily_sleep', { start_date: startDate, end_date: endDate });
+
+      // Fetch readiness data
+      const readinessData = await fetchOura(token, 'daily_readiness', { start_date: startDate, end_date: endDate });
+
+      if (!sleepData.data || sleepData.data.length === 0) {
+        throw new Error('No sleep data returned. Check your token.');
+      }
+
+      // Sort by date
+      const sleep = sleepData.data.sort((a, b) => a.day.localeCompare(b.day));
+      const readiness = readinessData.data || [];
+      const latestReadiness = readiness.length > 0 ? readiness[readiness.length - 1] : null;
+
+      // Build chart arrays
+      const labels = sleep.map(d => {
+        const dt = new Date(d.day);
+        return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      });
+      const actualHRV = sleep.map(d => d.average_hrv ?? null);
+      const actualSleep = sleep.map(d => d.deep_sleep_duration ? Math.round(d.deep_sleep_duration / 60) : null);
+
+      // Update charts
+      updateChartData(hrvChart, labels, actualHRV);
+      updateChartData(sleepChart, labels, actualSleep);
+
+      // Update stat tiles with latest night
+      const latest = sleep[sleep.length - 1];
+      const latestHRV = latest.average_hrv;
+      const latestSleep = latest.deep_sleep_duration ? Math.round(latest.deep_sleep_duration / 60) : null;
+
+      document.getElementById('tile-hrv-actual').innerHTML =
+        latestHRV ? `${latestHRV} <span class="tile-unit">ms</span>` : '—';
+      document.getElementById('tile-sleep-actual').innerHTML =
+        latestSleep ? `${latestSleep} <span class="tile-unit">min</span>` : '—';
+      document.getElementById('tile-readiness').textContent =
+        latestReadiness ? latestReadiness.score : '—';
+
+      // Show LIVE badges
+      document.getElementById('live-badge').style.display = '';
+      document.getElementById('sleep-badge').style.display = '';
+
+      setStatus('✓ Oura data loaded', 'success');
+    } catch (err) {
+      setStatus('Error: ' + err.message, 'error');
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // Init on load
+  initCharts();
 </script>
 </body>
 </html>
