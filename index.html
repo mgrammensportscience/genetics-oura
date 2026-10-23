@@ -12,7 +12,7 @@
     .header-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: #c0392b; margin-bottom: 4px; }
     h1 { font-size: 22px; font-weight: 800; color: #1a1a1a; }
     .header-sub { font-size: 12px; color: #888; margin-top: 2px; }
-    .app-body { display: flex; height: calc(100vh - 72px); }
+    .app-body { display: flex; min-height: calc(100vh - 72px); }
     .left-panel { width: 300px; background: white; border-right: 1px solid #ddd; padding: 20px; overflow-y: auto; flex-shrink: 0; }
     .right-panel { flex: 1; padding: 24px; overflow-y: auto; }
     .section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #888; margin-bottom: 14px; }
@@ -20,16 +20,20 @@
     .input-group { margin-bottom: 14px; }
     .input-group label { display: block; font-size: 11px; font-weight: 600; color: #555; margin-bottom: 5px; }
     .input-group select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 13px; color: #1a1a1a; appearance: none; }
-    .input-group input[type="password"],
-    .input-group input[type="text"] {
-      width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;
-      background: white; font-size: 12px; color: #1a1a1a; font-family: monospace;
+    .upload-box {
+      border: 2px dashed #ddd; border-radius: 8px; padding: 16px; text-align: center;
+      cursor: pointer; transition: border-color 0.2s; background: #fafafa; margin-bottom: 8px;
     }
-    .input-group input::placeholder { color: #bbb; }
-    .token-hint { font-size: 10px; color: #aaa; margin-top: 4px; line-height: 1.4; }
+    .upload-box:hover { border-color: #c0392b; }
+    .upload-box.has-file { border-color: #27ae60; background: #f0faf4; }
+    .upload-box input[type="file"] { display: none; }
+    .upload-icon { font-size: 24px; margin-bottom: 6px; }
+    .upload-label { font-size: 12px; font-weight: 600; color: #555; }
+    .upload-sub { font-size: 10px; color: #aaa; margin-top: 3px; }
+    .upload-hint { font-size: 10px; color: #aaa; line-height: 1.5; margin-bottom: 12px; }
+    .upload-hint a { color: #c0392b; text-decoration: none; }
     .analyze-btn { width: 100%; margin-top: 10px; padding: 11px; background: #c0392b; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.04em; }
     .analyze-btn:hover { background: #a93226; }
-    .analyze-btn:disabled { background: #e0a09a; cursor: not-allowed; }
     .status-msg { font-size: 11px; color: #888; margin-top: 10px; text-align: center; min-height: 16px; }
     .status-msg.error { color: #c0392b; }
     .status-msg.success { color: #27ae60; }
@@ -46,7 +50,13 @@
     .chart-card { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
     .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
     .chart-sub { font-size: 11px; color: #888; margin-bottom: 16px; }
-    .live-badge { display: inline-block; background: #27ae60; color: white; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 6px; border-radius: 3px; margin-left: 8px; vertical-align: middle; }
+    .live-badge { display: none; background: #27ae60; color: white; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 6px; border-radius: 3px; margin-left: 8px; vertical-align: middle; }
+    .live-badge.show { display: inline-block; }
+    .steps-box { background: #fff8f0; border: 1px solid #f0d9c8; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+    .steps-box h4 { font-size: 11px; font-weight: 700; color: #c0392b; margin-bottom: 8px; letter-spacing: 0.06em; }
+    .steps-box ol { padding-left: 16px; }
+    .steps-box li { font-size: 11px; color: #555; margin-bottom: 5px; line-height: 1.5; }
+    .steps-box li a { color: #c0392b; }
   </style>
 </head>
 <body>
@@ -58,12 +68,26 @@
   </header>
   <div class="app-body">
     <aside class="left-panel">
-      <div class="section-title">OURA RING CONNECTION</div>
-      <div class="input-group">
-        <label>Personal Access Token</label>
-        <input type="password" id="oura-token" placeholder="Paste your token here" autocomplete="off" />
-        <div class="token-hint">Get yours at cloud.ouraring.com → Personal Access Tokens. Never shared.</div>
+
+      <div class="section-title">OURA DATA</div>
+      <div class="steps-box">
+        <h4>HOW TO EXPORT YOUR DATA</h4>
+        <ol>
+          <li>Open the <strong>Oura app</strong> on your phone</li>
+          <li>Go to <strong>Profile → Settings → Data Export</strong></li>
+          <li>Tap <strong>Request Data Export</strong></li>
+          <li>You'll get an email with a <strong>.zip file</strong></li>
+          <li>Unzip it and find <strong>sleep.csv</strong></li>
+          <li>Upload it below ↓</li>
+        </ol>
       </div>
+
+      <label class="upload-box" id="upload-box" for="file-input">
+        <input type="file" id="file-input" accept=".csv" onchange="handleFile(event)">
+        <div class="upload-icon">📂</div>
+        <div class="upload-label" id="upload-label">Upload sleep.csv</div>
+        <div class="upload-sub">from your Oura data export</div>
+      </label>
 
       <hr class="divider">
       <div class="section-title">GENETIC PROFILE</div>
@@ -134,20 +158,20 @@
           <div class="tile-sub">RMSSD · Oura Ring</div>
         </div>
         <div class="tile">
-          <div class="tile-label">READINESS SCORE</div>
-          <div class="tile-value" id="tile-readiness">—</div>
-          <div class="tile-sub">Oura Ring · today</div>
+          <div class="tile-label">SLEEP SCORE</div>
+          <div class="tile-value" id="tile-score">—</div>
+          <div class="tile-sub">Oura Ring · last night</div>
         </div>
       </div>
 
       <div class="chart-card">
-        <div class="chart-title">HRV Trend — Genetic range vs your data <span class="live-badge" id="live-badge" style="display:none">LIVE</span></div>
+        <div class="chart-title">HRV Trend — Genetic range vs your data <span class="live-badge" id="live-badge">YOUR DATA</span></div>
         <div class="chart-sub">Last 30 days · RMSSD (ms)</div>
         <canvas id="hrv-chart"></canvas>
       </div>
 
       <div class="chart-card">
-        <div class="chart-title">Deep Sleep — Genetic prediction vs actual <span class="live-badge" id="sleep-badge" style="display:none">LIVE</span></div>
+        <div class="chart-title">Deep Sleep — Genetic prediction vs actual <span class="live-badge" id="sleep-badge">YOUR DATA</span></div>
         <div class="chart-sub">Last 30 days · minutes</div>
         <canvas id="sleep-chart"></canvas>
       </div>
@@ -156,74 +180,42 @@
 </div>
 
 <script>
-  // ── Genetic range lookup ──────────────────────────────────────────────────
+  // ── Genetic ranges ────────────────────────────────────────────────────────
   const geneticRanges = {
-    hrv: { challenge: [20,45], typical: [38,68], advantage: [55,90] },
+    hrv:   { challenge: [20,45], typical: [38,68], advantage: [55,90] },
     sleep: { challenge: [35,60], typical: [52,85], advantage: [75,110] }
   };
+
+  // ── Parsed Oura data ──────────────────────────────────────────────────────
+  let ouraData = null; // { labels[], hrv[], deepSleep[], score[] }
 
   // ── Chart instances ───────────────────────────────────────────────────────
   let hrvChart = null;
   let sleepChart = null;
 
-  function buildDemoLabels() {
-    const labels = [];
+  function demoLabels() {
+    const out = [];
     for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+      const d = new Date(); d.setDate(d.getDate() - i);
+      out.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
     }
-    return labels;
+    return out;
   }
 
-  function initCharts() {
-    const labels = buildDemoLabels();
-    const demoHRV = labels.map((_, i) => Math.round(45 + Math.sin(i / 5) * 8 + (Math.random() - 0.5) * 6));
-    const demoSleep = labels.map(() => Math.round(65 + (Math.random() - 0.5) * 20));
-
-    const [hrvLo, hrvHi] = geneticRanges.hrv.typical;
-    const [slLo, slHi] = geneticRanges.sleep.typical;
-
-    hrvChart = buildChart('hrv-chart', labels, demoHRV, hrvLo, hrvHi, 'RMSSD (ms)');
-    sleepChart = buildChart('sleep-chart', labels, demoSleep, slLo, slHi, 'Deep sleep (min)');
-  }
-
-  function buildChart(canvasId, labels, actual, lo, hi, yLabel) {
-    return new Chart(document.getElementById(canvasId), {
+  function buildChart(id, labels, actual, lo, hi, yLabel) {
+    return new Chart(document.getElementById(id), {
       type: 'line',
       data: {
         labels,
         datasets: [
-          {
-            label: 'Genetic upper range',
-            data: labels.map(() => hi),
-            borderColor: 'rgba(100,149,237,0.4)',
-            borderDash: [4, 3], borderWidth: 1, pointRadius: 0,
-            fill: '+1', backgroundColor: 'rgba(100,149,237,0.08)'
-          },
-          {
-            label: 'Genetic lower range',
-            data: labels.map(() => lo),
-            borderColor: 'rgba(100,149,237,0.4)',
-            borderDash: [4, 3], borderWidth: 1, pointRadius: 0,
-            fill: false
-          },
-          {
-            label: 'Your data',
-            data: actual,
-            borderColor: '#c0392b',
-            backgroundColor: 'rgba(192,57,43,0.06)',
-            borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
-            tension: 0.3, fill: false
-          }
+          { label: 'Genetic upper range', data: labels.map(() => hi), borderColor: 'rgba(100,149,237,0.4)', borderDash: [4,3], borderWidth: 1, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(100,149,237,0.08)' },
+          { label: 'Genetic lower range', data: labels.map(() => lo), borderColor: 'rgba(100,149,237,0.4)', borderDash: [4,3], borderWidth: 1, pointRadius: 0, fill: false },
+          { label: 'Your data', data: actual, borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,0.06)', borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, fill: false }
         ]
       },
       options: {
         responsive: true,
-        plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 11 } } },
-          tooltip: { mode: 'index', intersect: false }
-        },
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } }, tooltip: { mode: 'index', intersect: false } },
         scales: {
           x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
           y: { min: 0, ticks: { font: { size: 10 } }, title: { display: true, text: yLabel, font: { size: 10 }, color: '#aaa' } }
@@ -232,125 +224,144 @@
     });
   }
 
-  function updateChartRanges(chart, lo, hi) {
-    chart.data.datasets[0].data = chart.data.labels.map(() => hi);
-    chart.data.datasets[1].data = chart.data.labels.map(() => lo);
-    chart.update();
+  function initCharts() {
+    const labels = demoLabels();
+    const demoHRV   = labels.map((_, i) => Math.round(45 + Math.sin(i/5)*8 + (Math.random()-0.5)*6));
+    const demoSleep = labels.map(() => Math.round(65 + (Math.random()-0.5)*20));
+    hrvChart   = buildChart('hrv-chart',   labels, demoHRV,   38, 68, 'RMSSD (ms)');
+    sleepChart = buildChart('sleep-chart', labels, demoSleep, 52, 85, 'Deep sleep (min)');
   }
 
-  function updateChartData(chart, labels, actual) {
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = labels.map(() => chart.data.datasets[0].data[0]);
-    chart.data.datasets[1].data = labels.map(() => chart.data.datasets[1].data[0]);
-    chart.data.datasets[2].data = actual;
-    chart.update();
+  function refreshCharts(labels, actualHRV, actualSleep, lo_hrv, hi_hrv, lo_sl, hi_sl) {
+    // update ranges
+    const setRange = (chart, lo, hi) => {
+      chart.data.datasets[0].data = chart.data.labels.map(() => hi);
+      chart.data.datasets[1].data = chart.data.labels.map(() => lo);
+    };
+    // update labels + actual
+    const replaceData = (chart, newLabels, newActual) => {
+      chart.data.labels = newLabels;
+      const lo = chart.data.datasets[1].data[0] || 0;
+      const hi = chart.data.datasets[0].data[0] || 0;
+      chart.data.datasets[0].data = newLabels.map(() => hi);
+      chart.data.datasets[1].data = newLabels.map(() => lo);
+      chart.data.datasets[2].data = newActual;
+    };
+    setRange(hrvChart,   lo_hrv, hi_hrv);
+    setRange(sleepChart, lo_sl,  hi_sl);
+    if (labels) {
+      replaceData(hrvChart,   labels, actualHRV);
+      replaceData(sleepChart, labels, actualSleep);
+    }
+    hrvChart.update();
+    sleepChart.update();
   }
 
-  // ── Oura API fetch ────────────────────────────────────────────────────────
-  async function fetchOura(token, endpoint, params) {
-    const url = new URL(`https://api.ouraring.com/v2/usercollection/${endpoint}`);
-    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
+  // ── CSV parser ────────────────────────────────────────────────────────────
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const header = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
+    return lines.slice(1).map(line => {
+      const vals = line.split(',').map(v => v.trim().replace(/"/g, ''));
+      const obj = {};
+      header.forEach((h, i) => { obj[h] = vals[i]; });
+      return obj;
     });
-    if (!res.ok) throw new Error(`Oura API error ${res.status}: ${await res.text()}`);
-    return res.json();
   }
 
-  function setStatus(msg, type = '') {
+  function handleFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const rows = parseCSV(e.target.result);
+
+        // Sort by date, take last 30
+        rows.sort((a, b) => {
+          const da = a['date'] || a['day'] || a['summary_date'] || '';
+          const db = b['date'] || b['day'] || b['summary_date'] || '';
+          return da.localeCompare(db);
+        });
+        const recent = rows.slice(-30);
+
+        // Find the date column (Oura uses different names in different exports)
+        const dateKey = ['date','day','summary_date'].find(k => recent[0]?.[k]);
+        // Find HRV column
+        const hrvKey = ['average_hrv','hrv_average','rmssd'].find(k => recent[0]?.[k] !== undefined);
+        // Find deep sleep column (in seconds in some exports, minutes in others)
+        const deepKey = ['deep_sleep_duration','deep'].find(k => recent[0]?.[k] !== undefined);
+        // Find score column
+        const scoreKey = ['score','sleep_score'].find(k => recent[0]?.[k] !== undefined);
+
+        if (!dateKey) { setStatus('Could not find date column — is this sleep.csv?', 'error'); return; }
+
+        const labels = recent.map(r => {
+          const d = new Date(r[dateKey]);
+          return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        });
+        const actualHRV   = recent.map(r => hrvKey   ? (parseFloat(r[hrvKey])   || null) : null);
+        const rawSleep    = recent.map(r => deepKey  ? (parseFloat(r[deepKey])  || null) : null);
+        // Oura exports deep sleep in seconds; convert if > 300 (5 hours threshold)
+        const actualSleep = rawSleep.map(v => v === null ? null : (v > 300 ? Math.round(v/60) : Math.round(v)));
+        const scores      = recent.map(r => scoreKey ? (parseFloat(r[scoreKey]) || null) : null);
+
+        ouraData = { labels, actualHRV, actualSleep, scores };
+
+        // Update upload box
+        document.getElementById('upload-box').classList.add('has-file');
+        document.getElementById('upload-label').textContent = '✓ ' + file.name;
+        setStatus('File loaded — click Analyze to update charts', 'success');
+      } catch(err) {
+        setStatus('Could not read file: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function setStatus(msg, type='') {
     const el = document.getElementById('status-msg');
     el.textContent = msg;
-    el.className = 'status-msg' + (type ? ' ' + type : '');
+    el.className = 'status-msg' + (type ? ' '+type : '');
   }
 
   // ── Main analyze ──────────────────────────────────────────────────────────
-  async function analyze() {
-    const token = document.getElementById('oura-token').value.trim();
+  function analyze() {
     const deepSleep = document.getElementById('g-deep-sleep').value;
-    const hrv = document.getElementById('g-hrv').value;
-    const cortisol = document.getElementById('g-cortisol').value;
+    const hrv       = document.getElementById('g-hrv').value;
+    const cortisol  = document.getElementById('g-cortisol').value;
 
-    // Update genetic predictions
     const [hrvLo, hrvHi] = geneticRanges.hrv[hrv];
-    const [slLo, slHi] = geneticRanges.sleep[deepSleep];
+    const [slLo,  slHi]  = geneticRanges.sleep[deepSleep];
     const slMid = Math.round((slLo + slHi) / 2);
-    const cortisolMap = { high: 'High', moderate: 'Moderate', low: 'Low' };
+    const cortisolMap = { high:'High', moderate:'Moderate', low:'Low' };
 
     document.getElementById('tile-sleep-pred').innerHTML = slMid + ' <span class="tile-unit">min</span>';
-    document.getElementById('tile-hrv-pred').innerHTML = `${hrvLo}–${hrvHi} <span class="tile-unit" style="font-size:13px">ms</span>`;
-    document.getElementById('tile-stress').textContent = cortisolMap[cortisol];
+    document.getElementById('tile-hrv-pred').innerHTML   = `${hrvLo}–${hrvHi} <span class="tile-unit" style="font-size:13px">ms</span>`;
+    document.getElementById('tile-stress').textContent   = cortisolMap[cortisol];
 
-    updateChartRanges(hrvChart, hrvLo, hrvHi);
-    updateChartRanges(sleepChart, slLo, slHi);
+    if (ouraData) {
+      const { labels, actualHRV, actualSleep, scores } = ouraData;
+      refreshCharts(labels, actualHRV, actualSleep, hrvLo, hrvHi, slLo, slHi);
 
-    // If no token, just show genetic predictions with demo data
-    if (!token) {
-      setStatus('Enter your Oura token to load real data');
-      return;
-    }
+      // Latest night tiles
+      const lastHRV   = [...actualHRV].reverse().find(v => v !== null);
+      const lastSleep = [...actualSleep].reverse().find(v => v !== null);
+      const lastScore = [...scores].reverse().find(v => v !== null);
 
-    // Fetch real Oura data
-    const btn = document.getElementById('analyze-btn');
-    btn.disabled = true;
-    setStatus('Fetching Oura data…');
+      document.getElementById('tile-hrv-actual').innerHTML   = lastHRV   ? `${Math.round(lastHRV)} <span class="tile-unit">ms</span>` : '—';
+      document.getElementById('tile-sleep-actual').innerHTML = lastSleep  ? `${lastSleep} <span class="tile-unit">min</span>` : '—';
+      document.getElementById('tile-score').textContent      = lastScore  ? lastScore : '—';
 
-    try {
-      const endDate = new Date().toISOString().slice(0, 10);
-      const startDate = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-
-      // Fetch sleep data (includes average_hrv and deep_sleep_duration)
-      const sleepData = await fetchOura(token, 'daily_sleep', { start_date: startDate, end_date: endDate });
-
-      // Fetch readiness data
-      const readinessData = await fetchOura(token, 'daily_readiness', { start_date: startDate, end_date: endDate });
-
-      if (!sleepData.data || sleepData.data.length === 0) {
-        throw new Error('No sleep data returned. Check your token.');
-      }
-
-      // Sort by date
-      const sleep = sleepData.data.sort((a, b) => a.day.localeCompare(b.day));
-      const readiness = readinessData.data || [];
-      const latestReadiness = readiness.length > 0 ? readiness[readiness.length - 1] : null;
-
-      // Build chart arrays
-      const labels = sleep.map(d => {
-        const dt = new Date(d.day);
-        return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-      });
-      const actualHRV = sleep.map(d => d.average_hrv ?? null);
-      const actualSleep = sleep.map(d => d.deep_sleep_duration ? Math.round(d.deep_sleep_duration / 60) : null);
-
-      // Update charts
-      updateChartData(hrvChart, labels, actualHRV);
-      updateChartData(sleepChart, labels, actualSleep);
-
-      // Update stat tiles with latest night
-      const latest = sleep[sleep.length - 1];
-      const latestHRV = latest.average_hrv;
-      const latestSleep = latest.deep_sleep_duration ? Math.round(latest.deep_sleep_duration / 60) : null;
-
-      document.getElementById('tile-hrv-actual').innerHTML =
-        latestHRV ? `${latestHRV} <span class="tile-unit">ms</span>` : '—';
-      document.getElementById('tile-sleep-actual').innerHTML =
-        latestSleep ? `${latestSleep} <span class="tile-unit">min</span>` : '—';
-      document.getElementById('tile-readiness').textContent =
-        latestReadiness ? latestReadiness.score : '—';
-
-      // Show LIVE badges
-      document.getElementById('live-badge').style.display = '';
-      document.getElementById('sleep-badge').style.display = '';
-
-      setStatus('✓ Oura data loaded', 'success');
-    } catch (err) {
-      setStatus('Error: ' + err.message, 'error');
-      console.error(err);
-    } finally {
-      btn.disabled = false;
+      document.getElementById('live-badge').classList.add('show');
+      document.getElementById('sleep-badge').classList.add('show');
+      setStatus('Charts updated with your Oura data ✓', 'success');
+    } else {
+      refreshCharts(null, null, null, hrvLo, hrvHi, slLo, slHi);
+      setStatus('Upload sleep.csv to see your real data');
     }
   }
 
-  // Init on load
   initCharts();
 </script>
 </body>
