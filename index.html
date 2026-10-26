@@ -1,356 +1,1070 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Genotype vs Phenotype</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #edeae3; font-family: 'Inter', sans-serif; color: #1a1a1a; font-size: 14px; }
-    .app-header { background: white; border-bottom: 1px solid #ddd; padding: 16px 28px; }
-    .header-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: #c0392b; margin-bottom: 4px; }
-    h1 { font-size: 22px; font-weight: 800; color: #1a1a1a; }
-    .header-sub { font-size: 12px; color: #888; margin-top: 2px; }
-    .app-body { display: flex; min-height: calc(100vh - 72px); }
-    .left-panel { width: 300px; background: white; border-right: 1px solid #ddd; padding: 20px; overflow-y: auto; flex-shrink: 0; }
-    .right-panel { flex: 1; padding: 24px; overflow-y: auto; }
-    .section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #888; margin-bottom: 14px; }
-    .divider { border: none; border-top: 1px solid #eee; margin: 18px 0; }
-    .input-group { margin-bottom: 14px; }
-    .input-group label { display: block; font-size: 11px; font-weight: 600; color: #555; margin-bottom: 5px; }
-    .input-group select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 13px; color: #1a1a1a; appearance: none; }
-    .upload-box { border: 2px dashed #ddd; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; background: #fafafa; margin-bottom: 8px; }
-    .upload-box:hover { border-color: #c0392b; }
-    .upload-box.has-file { border-color: #27ae60; background: #f0faf4; }
-    .upload-box input[type="file"] { display: none; }
-    .upload-icon { font-size: 24px; margin-bottom: 6px; }
-    .upload-label { font-size: 12px; font-weight: 600; color: #555; }
-    .upload-sub { font-size: 10px; color: #aaa; margin-top: 3px; }
-    .analyze-btn { width: 100%; margin-top: 10px; padding: 11px; background: #c0392b; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.04em; }
-    .analyze-btn:hover { background: #a93226; }
-    .status-msg { font-size: 11px; color: #888; margin-top: 10px; text-align: center; min-height: 16px; }
-    .status-msg.error { color: #c0392b; }
-    .status-msg.success { color: #27ae60; }
-    .tiles-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-    .tile { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; }
-    .tile-dark { background: #1a1a1a; border-color: #1a1a1a; color: white; }
-    .tile-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #888; margin-bottom: 10px; }
-    .tile-dark .tile-label { color: #aaa; }
-    .tile-value { font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
-    .tile-unit { font-size: 14px; font-weight: 500; color: #888; }
-    .tile-accent { color: #c0392b; }
-    .tile-sub { font-size: 11px; color: #888; }
-    .tile-dark .tile-sub { color: #777; }
-    .chart-card { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-    .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-    .chart-sub { font-size: 11px; color: #888; margin-bottom: 16px; }
-    .live-badge { display: none; background: #27ae60; color: white; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 6px; border-radius: 3px; margin-left: 8px; vertical-align: middle; }
-    .live-badge.show { display: inline-block; }
-    .steps-box { background: #fff8f0; border: 1px solid #f0d9c8; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
-    .steps-box h4 { font-size: 11px; font-weight: 700; color: #c0392b; margin-bottom: 8px; letter-spacing: 0.06em; }
-    .steps-box ol { padding-left: 16px; }
-    .steps-box li { font-size: 11px; color: #555; margin-bottom: 5px; line-height: 1.5; }
-  </style>
-</head>
-<body>
-<div class="app">
-  <header class="app-header">
-    <div class="header-label">GENETICS LAB</div>
-    <h1>Genotype vs Phenotype Analyzer</h1>
-    <p class="header-sub">by Maria Grammenou</p>
-  </header>
-  <div class="app-body">
-    <aside class="left-panel">
-      <div class="section-title">OURA DATA</div>
-      <div class="steps-box">
-        <h4>HOW TO EXPORT YOUR DATA</h4>
-        <ol>
-          <li>Open the <strong>Oura app</strong> on your phone</li>
-          <li>Go to <strong>Profile → Settings → Data Export</strong></li>
-          <li>Tap <strong>Request Data Export</strong></li>
-          <li>You'll get an email with a <strong>.zip file</strong></li>
-          <li>Find your sleep Excel or CSV file and upload below ↓</li>
-        </ol>
-      </div>
+<title>Genotype vs Phenotype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-      <label class="upload-box" id="upload-box" for="file-input">
-        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
-        <div class="upload-icon">📂</div>
-        <div class="upload-label" id="upload-label">Upload your Oura file</div>
-        <div class="upload-sub">.xlsx, .xls or .csv accepted</div>
+<style>
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Layout: dark left panel + lighter main panel; both adapt to theme.
+   Accent: scientific green (REVIVE DNA palette) + severity colors.
+   Type: Inter for UI, JetBrains Mono for genetic data / numbers.
+────────────────────────────────────────────────────────────────────────── */
+:root {
+  --panel-bg:    #0f1117;
+  --panel-fg:    #e8eaf0;
+  --panel-muted: #6b7280;
+  --panel-border:#1f2330;
+  --main-bg:     #f5f6f8;
+  --main-fg:     #111318;
+  --card-bg:     #ffffff;
+  --card-border: #e2e4ea;
+  --accent:      #16a34a;
+  --accent-dim:  #14532d;
+  --accent-faint:#dcfce7;
+  --high:        #16a34a;
+  --med:         #d97706;
+  --low:         #dc2626;
+  --bar-high:    #16a34a;
+  --bar-med:     #92400e;
+  --bar-low:     #991b1b;
+  --mono:        'JetBrains Mono', monospace;
+  --sans:        'Inter', system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --main-bg:    #0b0d12;
+    --main-fg:    #dde1eb;
+    --card-bg:    #13161f;
+    --card-border:#1e2230;
+    --accent-faint:#052e16;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --main-bg:    #0b0d12;
+  --main-fg:    #dde1eb;
+  --card-bg:    #13161f;
+  --card-border:#1e2230;
+  --accent-faint:#052e16;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--main-bg);
+  color: var(--main-fg);
+  font-size: 14px;
+  min-height: 100%;
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+}
+
+/* ── Layout ────────────────────────────────────────────────────────────── */
+.shell { display: flex; min-height: 100vh; }
+
+.panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 28px max(20px, env(safe-area-inset-right, 0px)) 40px 28px;
+  overflow-y: auto;
+}
+
+/* ── Panel header ──────────────────────────────────────────────────────── */
+.panel-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--panel-border);
+}
+.panel-kicker {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.panel-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--panel-fg);
+  line-height: 1.2;
+}
+.panel-sub {
+  font-size: 10px;
+  color: var(--panel-muted);
+  margin-top: 3px;
+}
+
+/* ── Panel section ─────────────────────────────────────────────────────── */
+.panel-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border);
+}
+.section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--panel-muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* ── Upload boxes ──────────────────────────────────────────────────────── */
+.upload-zone {
+  border: 1.5px dashed var(--panel-border);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: transparent;
+  display: block;
+}
+.upload-zone:hover { border-color: var(--accent); }
+.upload-zone.loaded { border-color: var(--accent); background: rgba(22,163,74,0.07); }
+.upload-zone.loaded-warn { border-color: #d97706; background: rgba(217,119,6,0.07); }
+.upload-zone input[type="file"] { display: none; }
+.upload-icon { font-size: 20px; margin-bottom: 4px; }
+.upload-name { font-size: 11px; font-weight: 600; color: var(--panel-fg); }
+.upload-sub  { font-size: 10px; color: var(--panel-muted); margin-top: 2px; }
+
+/* ── Analyse button ────────────────────────────────────────────────────── */
+.btn-analyse {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 14px 20px 0;
+  padding: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-analyse:hover { opacity: 0.88; }
+
+.status-line {
+  font-size: 10px;
+  color: var(--panel-muted);
+  text-align: center;
+  padding: 8px 20px 4px;
+  min-height: 24px;
+}
+.status-line.ok  { color: var(--accent); }
+.status-line.err { color: var(--low); }
+
+/* ── SNP scan summary (shown after genetic file load) ──────────────────── */
+.snp-summary { padding: 12px 20px; border-bottom: 1px solid var(--panel-border); }
+.snp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.snp-gene {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--panel-fg);
+  width: 72px;
+  flex-shrink: 0;
+}
+.snp-geno {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--panel-muted);
+  width: 28px;
+}
+.snp-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-2 { background: var(--high); }
+.dot-1 { background: var(--med); }
+.dot-0 { background: var(--low); }
+.dot-na { background: var(--panel-border); }
+.snp-label { font-size: 9px; color: var(--panel-muted); }
+
+/* ── Main header ───────────────────────────────────────────────────────── */
+.main-header { margin-bottom: 24px; }
+.main-kicker {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.main-title { font-size: 22px; font-weight: 800; line-height: 1.2; }
+.main-sub   { font-size: 12px; color: var(--panel-muted); margin-top: 3px; }
+
+/* ── Section heading ───────────────────────────────────────────────────── */
+.section-heading {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--panel-muted);
+  margin-bottom: 14px;
+}
+
+/* ── Polygenic score bars ──────────────────────────────────────────────── */
+.score-bars {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.score-bar-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--panel-muted);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+.bar-row:last-child { margin-bottom: 0; }
+.bar-domain {
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--main-fg);
+}
+.bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--card-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  min-width: 3px;
+}
+.bar-score {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--main-fg);
+  width: 28px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bar-chip {
+  width: 46px;
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 2px 0;
+  border-radius: 4px;
+}
+.chip-high { background: var(--accent-faint); color: var(--high); }
+.chip-med  { background: #fef3c7; color: #92400e; }
+.chip-low  { background: #fee2e2; color: #991b1b; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip-med { background: #451a03; color: #fbbf24; }
+  :root:not([data-theme="light"]) .chip-low { background: #450a0a; color: #f87171; }
+}
+:root[data-theme="dark"] .chip-med { background: #451a03; color: #fbbf24; }
+:root[data-theme="dark"] .chip-low { background: #450a0a; color: #f87171; }
+
+/* ── Score tiles ───────────────────────────────────────────────────────── */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+.tile {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.tile-dark {
+  background: var(--panel-bg);
+  border-color: var(--panel-border);
+  color: var(--panel-fg);
+}
+.tile-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--panel-muted);
+  margin-bottom: 8px;
+}
+.tile-val {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 4px;
+}
+.tile-sub { font-size: 10px; color: var(--panel-muted); }
+.tile-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.tag-above  { background: #fee2e2; color: #991b1b; }
+.tag-within { background: var(--accent-faint); color: var(--high); }
+.tag-below  { background: #fef3c7; color: #92400e; }
+
+/* ── Chart cards ───────────────────────────────────────────────────────── */
+.chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.chart-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.chart-card-sub {
+  font-size: 10px;
+  color: var(--panel-muted);
+  margin-bottom: 16px;
+}
+.live-badge {
+  display: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+.live-badge.on { display: inline; }
+
+/* ── Missing SNP note ──────────────────────────────────────────────────── */
+.no-data-state {
+  background: var(--card-bg);
+  border: 1.5px dashed var(--card-border);
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.no-data-icon { font-size: 32px; margin-bottom: 10px; }
+.no-data-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.no-data-sub   { font-size: 12px; color: var(--panel-muted); line-height: 1.6; max-width: 360px; margin: 0 auto; }
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .shell { flex-direction: column; }
+  .panel { width: 100%; border-right: none; border-bottom: 1px solid var(--panel-border); }
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .bar-domain { width: 100px; font-size: 10px; }
+  .main { padding: 20px max(16px, env(safe-area-inset-right, 0px)) 32px 16px; }
+}
+@media (max-width: 400px) {
+  .tiles { grid-template-columns: 1fr; }
+}
+</style>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     PAGE
+══════════════════════════════════════════════════════════════════════════ -->
+<div class="shell">
+
+  <!-- ── LEFT PANEL ──────────────────────────────────────────────────── -->
+  <aside class="panel">
+    <div class="panel-header">
+      <div class="panel-kicker">REVIVE DNA × Oura Ring</div>
+      <div class="panel-title">Genotype vs Phenotype</div>
+      <div class="panel-sub">by Maria Grammenou</div>
+    </div>
+
+    <!-- Genetic file -->
+    <div class="panel-section">
+      <div class="section-label">Genetic Data — raw SNP file</div>
+      <label class="upload-zone" id="dna-zone" for="dna-input">
+        <input type="file" id="dna-input" accept=".txt,.csv,.tsv,.zip" onchange="loadDNA(event)">
+        <div class="upload-icon">🧬</div>
+        <div class="upload-name" id="dna-name">Upload genetic file</div>
+        <div class="upload-sub">23andMe, AncestryDNA or similar · .txt</div>
       </label>
+    </div>
 
-      <hr class="divider">
-      <div class="section-title">GENETIC PROFILE</div>
+    <!-- Oura file -->
+    <div class="panel-section">
+      <div class="section-label">Wearable Data — Oura export</div>
+      <label class="upload-zone" id="oura-zone" for="oura-input">
+        <input type="file" id="oura-input" accept=".xlsx,.xls,.csv" onchange="loadOura(event)">
+        <div class="upload-icon">📊</div>
+        <div class="upload-name" id="oura-name">Upload Oura file</div>
+        <div class="upload-sub">.xlsx, .xls or .csv · sleep scores</div>
+      </label>
+    </div>
 
-      <div class="input-group">
-        <label>Deep sleep capacity</label>
-        <select id="g-deep-sleep">
-          <option value="challenge">Challenge</option>
-          <option value="typical" selected>Typical</option>
-          <option value="advantage">Advantage</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <label>Chronotype</label>
-        <select id="g-chronotype">
-          <option value="evening">Evening owl</option>
-          <option value="intermediate" selected>Intermediate</option>
-          <option value="morning">Morning lark</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <label>Sleep efficiency</label>
-        <select id="g-efficiency">
-          <option value="challenge">Challenge</option>
-          <option value="typical" selected>Typical</option>
-          <option value="advantage">Advantage</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <label>Cortisol reactivity</label>
-        <select id="g-cortisol">
-          <option value="high">High</option>
-          <option value="moderate" selected>Moderate</option>
-          <option value="low">Low</option>
-        </select>
-      </div>
-      <button class="analyze-btn" id="analyze-btn" onclick="analyze()">Analyze →</button>
-      <div class="status-msg" id="status-msg"></div>
-    </aside>
+    <button class="btn-analyse" onclick="analyse()">Analyse →</button>
+    <div class="status-line" id="status"></div>
 
-    <main class="right-panel">
-      <!-- Row 1: Sleep scores -->
-      <div class="tiles-row">
-        <div class="tile tile-dark">
-          <div class="tile-label">PREDICTED DEEP SLEEP SCORE</div>
-          <div class="tile-value" id="tile-deep-pred">55–75</div>
-          <div class="tile-sub">genetic range · score /100</div>
-        </div>
-        <div class="tile">
-          <div class="tile-label">ACTUAL DEEP SLEEP SCORE</div>
-          <div class="tile-value tile-accent" id="tile-deep-actual">—</div>
-          <div class="tile-sub">most recent · Oura Ring</div>
-        </div>
-        <div class="tile">
-          <div class="tile-label">TOTAL SLEEP SCORE</div>
-          <div class="tile-value" id="tile-total-score">—</div>
-          <div class="tile-sub">most recent · Oura Ring</div>
-        </div>
-      </div>
-      <!-- Row 2: Other scores -->
-      <div class="tiles-row">
-        <div class="tile">
-          <div class="tile-label">REM SLEEP SCORE</div>
-          <div class="tile-value tile-accent" id="tile-rem">—</div>
-          <div class="tile-sub">most recent · Oura Ring</div>
-        </div>
-        <div class="tile tile-dark">
-          <div class="tile-label">SLEEP EFFICIENCY SCORE</div>
-          <div class="tile-value" id="tile-efficiency">—</div>
-          <div class="tile-sub">most recent · Oura Ring</div>
-        </div>
-        <div class="tile">
-          <div class="tile-label">STRESS PROFILE</div>
-          <div class="tile-value" id="tile-stress">Moderate</div>
-          <div class="tile-sub">cortisol reactivity · genetics</div>
-        </div>
-      </div>
+    <!-- SNP scan results (populated after DNA upload) -->
+    <div class="snp-summary" id="snp-summary" style="display:none">
+      <div class="section-label">SNPs found in your file</div>
+      <div id="snp-rows"></div>
+    </div>
+  </aside>
 
-      <div class="chart-card">
-        <div class="chart-title">Deep Sleep Score — Genetic range vs your data <span class="live-badge" id="badge-deep">YOUR DATA</span></div>
-        <div class="chart-sub">Last 30 entries · score out of 100</div>
-        <canvas id="deep-chart"></canvas>
-      </div>
+  <!-- ── MAIN PANEL ───────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="main-header">
+      <div class="main-kicker">Polygenic Score Dashboard</div>
+      <div class="main-title">Genetic Predisposition vs Measured Performance</div>
+      <div class="main-sub">Upload your raw genetic file and Oura export — all processing happens locally in your browser</div>
+    </div>
 
-      <div class="chart-card">
-        <div class="chart-title">Total Sleep Score — Trend <span class="live-badge" id="badge-total">YOUR DATA</span></div>
-        <div class="chart-sub">Last 30 entries · score out of 100</div>
-        <canvas id="total-chart"></canvas>
+    <!-- Polygenic score bars -->
+    <div class="section-heading">Genetic Domain Scores</div>
+    <div class="score-bars" id="score-bars">
+      <div class="score-bar-label">Ranked by polygenic score (0–100)</div>
+      <!-- Populated by JS -->
+      <div id="bar-rows">
+        <div class="no-data-state" style="border:none;padding:8px 0;">
+          <div class="no-data-sub">Upload your genetic file to see domain scores</div>
+        </div>
       </div>
-    </main>
-  </div>
+    </div>
+
+    <!-- Oura tiles -->
+    <div class="section-heading">Latest Oura Scores vs Genetic Range</div>
+    <div class="tiles">
+      <div class="tile tile-dark">
+        <div class="tile-lbl">Predicted Deep Sleep Range</div>
+        <div class="tile-val" id="t-pred">—</div>
+        <div class="tile-sub">genetic algorithm · /100</div>
+        <div id="t-pred-basis" style="font-size:9px;color:#4b5563;margin-top:4px;line-height:1.4;"></div>
+      </div>
+      <div class="tile">
+        <div class="tile-lbl">Actual Deep Sleep Score</div>
+        <div class="tile-val" id="t-deep" style="color:var(--low)">—</div>
+        <div class="tile-sub">most recent · Oura Ring</div>
+        <div id="t-deep-tag"></div>
+      </div>
+      <div class="tile">
+        <div class="tile-lbl">Total Sleep Score</div>
+        <div class="tile-val" id="t-total">—</div>
+        <div class="tile-sub">most recent · Oura Ring</div>
+      </div>
+    </div>
+    <div class="tiles">
+      <div class="tile">
+        <div class="tile-lbl">REM Sleep Score</div>
+        <div class="tile-val" id="t-rem" style="color:var(--accent)">—</div>
+        <div class="tile-sub">most recent · Oura Ring</div>
+      </div>
+      <div class="tile tile-dark">
+        <div class="tile-lbl">Sleep Efficiency Score</div>
+        <div class="tile-val" id="t-eff">—</div>
+        <div class="tile-sub">most recent · Oura Ring</div>
+        <div id="t-eff-tag"></div>
+      </div>
+      <div class="tile">
+        <div class="tile-lbl">Cortisol Profile</div>
+        <div class="tile-val" id="t-cortisol" style="font-size:18px;padding-top:6px;line-height:1.3">—</div>
+        <div class="tile-sub">FKBP5 · COMT · CRHR1</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-card">
+      <div class="chart-card-title">
+        Deep Sleep Score — Genetic Range vs Your Data
+        <span class="live-badge" id="badge-deep">LIVE</span>
+      </div>
+      <div class="chart-card-sub">Last 30 entries · score /100 · blue band = predicted genetic range from your SNPs</div>
+      <canvas id="chart-deep"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-title">
+        Total Sleep Score — Trend
+        <span class="live-badge" id="badge-total">LIVE</span>
+      </div>
+      <div class="chart-card-sub">Last 30 entries · score /100</div>
+      <canvas id="chart-total"></canvas>
+    </div>
+  </main>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════════
+     ALGORITHM
+══════════════════════════════════════════════════════════════════════════ -->
 <script>
-  // ── Genetic score ranges (0–100) ──────────────────────────────────────────
-  const geneticRanges = {
-    deepSleep:  { challenge: [25,50], typical: [45,72], advantage: [65,92] },
-    efficiency: { challenge: [40,62], typical: [58,80], advantage: [72,95] }
+// ─────────────────────────────────────────────────────────────────────────
+// SNP DATABASE
+// Each rsID maps to gene info and a score lookup.
+// Score: 2 = favourable, 1 = intermediate, 0 = unfavourable.
+// Genotype strings are normalised (sorted alphabetically) before lookup
+// so "GT" and "TG" both resolve to "GT".
+// ─────────────────────────────────────────────────────────────────────────
+const SNP_DB = {
+  // ── Circadian clock / deep sleep ────────────────────────────────────
+  'rs10830963': {
+    gene: 'MTNR1B', cluster: 'Deep Sleep',
+    desc: 'Melatonin receptor — circadian timing & slow-wave depth',
+    // C = protective, G = risk (raised fasting glucose & disrupted sleep)
+    scores: { CC: 2, CG: 1, GG: 0 }
+  },
+  'rs1801260': {
+    gene: 'CLOCK', cluster: 'Deep Sleep',
+    desc: 'Master circadian gene — sleep-wake cycle length & SWS timing',
+    // C = shorter circadian period (morning type), T = risk for evening type / insomnia
+    scores: { CC: 2, CT: 1, TT: 0 }
+  },
+  'rs2735611': {
+    gene: 'PER1', cluster: 'Deep Sleep',
+    desc: 'Period gene — fine-tunes circadian phase & sleep depth',
+    // C = morning type / shorter sleep (varies by study); T = more stable deep sleep
+    scores: { CC: 0, CT: 1, TT: 2 }
+  },
+  'rs2305160': {
+    gene: 'NPAS2', cluster: 'Deep Sleep',
+    desc: 'Backup circadian driver — peripheral clock redundancy',
+    scores: { AA: 2, AG: 1, GG: 0 }
+  },
+
+  // ── Cortisol & stress axis ───────────────────────────────────────────
+  'rs1360780': {
+    gene: 'FKBP5', cluster: 'Cortisol',
+    desc: 'Cortisol receptor co-chaperone — stress reactivity & SWS suppression',
+    // T allele → increased GR sensitivity → elevated cortisol → disrupted SWS
+    scores: { CC: 2, CT: 1, TT: 0 }
+  },
+  'rs4680': {
+    gene: 'COMT', cluster: 'Cortisol',
+    desc: 'Val158Met — catecholamine clearance, stress sensitivity',
+    // G = Val (faster COMT, better stress clearance); A = Met (slower, higher stress)
+    scores: { GG: 2, AG: 1, AA: 0 }
+  },
+  'rs110402': {
+    gene: 'CRHR1', cluster: 'Cortisol',
+    desc: 'CRH receptor — controls sensitivity to stress hormone cascade',
+    scores: { TT: 2, CT: 1, CC: 0 }
+  },
+
+  // ── Serotonin / sleep onset ──────────────────────────────────────────
+  'rs4570625': {
+    gene: 'TPH2', cluster: 'Sleep Onset',
+    desc: 'Rate-limiting enzyme for serotonin synthesis → melatonin precursor',
+    // G = higher serotonin production → better sleep onset
+    scores: { GG: 2, GT: 1, TT: 0 }
+  },
+  'rs6265': {
+    gene: 'BDNF', cluster: 'Sleep Onset',
+    desc: 'Val66Met — neuroplasticity, sleep architecture & mood regulation',
+    // C = Val66 (favourable neuroplasticity); A = Met66 (slightly reduced secretion)
+    scores: { CC: 2, AC: 1, AA: 0 }
+  },
+  'rs25531': {
+    gene: 'SLC6A4', cluster: 'Sleep Onset',
+    desc: 'Serotonin transporter — sleep latency & emotional arousal at night',
+    // A = long allele proxy (higher transporter expression → better sleep onset)
+    scores: { AA: 2, AG: 1, GG: 0 }
+  },
+
+  // ── Mitochondrial recovery ───────────────────────────────────────────
+  'rs4880': {
+    gene: 'SOD2', cluster: 'Recovery',
+    desc: 'Ala16Val — mitochondrial antioxidant defence during sleep restoration',
+    // T = Ala (more efficient mitochondrial import); C = Val (less efficient)
+    scores: { TT: 2, CT: 1, CC: 0 }
+  },
+  'rs8192678': {
+    gene: 'PGC-1α', cluster: 'Recovery',
+    desc: 'Gly482Ser — mitochondrial biogenesis & cellular repair during sleep',
+    // A = Gly482 (favourable for mitochondrial function & VO2max)
+    scores: { AA: 2, AG: 1, GG: 0 }
+  },
+
+  // ── Inflammation ─────────────────────────────────────────────────────
+  'rs1800795': {
+    gene: 'IL-6', cluster: 'Recovery',
+    desc: 'Interleukin-6 promoter — systemic inflammation & recovery speed',
+    // C = lower IL-6 production → less inflammation → better recovery
+    scores: { CC: 2, CG: 1, GG: 0 }
+  },
+
+  // ── Restless legs / sleep continuity ─────────────────────────────────
+  'rs3923809': {
+    gene: 'BTBD9', cluster: 'Sleep Onset',
+    desc: 'Restless legs syndrome risk — iron-dependent dopamine & sleep continuity',
+    // A = protective; G = elevated RLS risk → fragmented sleep
+    scores: { AA: 2, AG: 1, GG: 0 }
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// DOMAIN DEFINITIONS
+// Each domain uses a subset of SNPs with weights. The algorithm computes a
+// weighted score (0–100) and maps it to Low / Med / High and a predicted
+// Oura score range.
+// ─────────────────────────────────────────────────────────────────────────
+const DOMAINS = [
+  {
+    id: 'deep',
+    label: 'Deep Sleep',
+    snps: {
+      rs10830963: 0.30,
+      rs1801260:  0.22,
+      rs2735611:  0.15,
+      rs2305160:  0.13,
+      rs1360780:  0.20   // cortisol suppresses SWS
+    },
+    ouraRange: { low:[12,45], med:[38,68], high:[58,90] }
+  },
+  {
+    id: 'onset',
+    label: 'Sleep Onset',
+    snps: {
+      rs4570625: 0.25,
+      rs6265:    0.20,
+      rs25531:   0.22,
+      rs3923809: 0.20,
+      rs4680:    0.13   // stress arousal at bedtime
+    },
+    ouraRange: { low:[20,52], med:[44,72], high:[62,92] }
+  },
+  {
+    id: 'cortisol',
+    label: 'Cortisol / Stress',
+    snps: {
+      rs1360780: 0.40,
+      rs4680:    0.35,
+      rs110402:  0.25
+    },
+    ouraRange: null   // no direct Oura column for this
+  },
+  {
+    id: 'recovery',
+    label: 'Recovery Capacity',
+    snps: {
+      rs4880:    0.35,
+      rs8192678: 0.30,
+      rs1800795: 0.35
+    },
+    ouraRange: null
+  },
+  {
+    id: 'total',
+    label: 'Total Sleep',
+    snps: {
+      rs10830963: 0.18,
+      rs1801260:  0.14,
+      rs4570625:  0.16,
+      rs6265:     0.14,
+      rs1360780:  0.18,
+      rs4880:     0.12,
+      rs1800795:  0.08
+    },
+    ouraRange: { low:[28,55], med:[48,72], high:[65,92] }
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────
+// UTILITY
+// ─────────────────────────────────────────────────────────────────────────
+function normGeno(g) {
+  // Sort two characters alphabetically so AC == CA, etc.
+  return g && g.length === 2 ? [g[0], g[1]].sort().join('') : g;
+}
+
+function scoreGeno(rsid, rawGeno) {
+  const def = SNP_DB[rsid];
+  if (!def || !rawGeno) return null;
+  const n = normGeno(rawGeno.toUpperCase().trim());
+  const s = def.scores[n];
+  return (s !== undefined) ? s : null;
+}
+
+function classifyDomain(score0to100) {
+  if (score0to100 >= 65) return 'high';
+  if (score0to100 >= 34) return 'med';
+  return 'low';
+}
+
+function labelFor(cls) {
+  return { high: 'High', med: 'Med', low: 'Low' }[cls];
+}
+
+function rangeFor(domain, cls) {
+  const r = domain.ouraRange;
+  if (!r) return null;
+  return r[cls];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PARSE RAW GENETIC FILE (23andMe / AncestryDNA / similar)
+// Format: lines may start with # (skip). Data lines are tab-separated:
+//   rsid  chromosome  position  genotype
+// Some files have different column orders; we detect by header.
+// ─────────────────────────────────────────────────────────────────────────
+function parseDNAFile(text) {
+  const lines = text.split(/\r?\n/);
+  const result = {}; // rsid → genotype string
+
+  // Find header line to detect column indices
+  let rsCol = 0, genoCol = 3; // defaults (23andMe standard)
+  let headerFound = false;
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    if (line.startsWith('#')) {
+      // Look for column header comment
+      if (line.toLowerCase().includes('rsid')) {
+        const parts = line.replace(/^#+\s*/, '').split(/\t|,/);
+        rsCol   = parts.findIndex(p => /rsid/i.test(p));
+        genoCol = parts.findIndex(p => /genotype|allele|result/i.test(p));
+        if (rsCol < 0) rsCol = 0;
+        if (genoCol < 0) genoCol = 3;
+        headerFound = true;
+      }
+      continue;
+    }
+    // Non-comment, non-empty line → data
+    const sep = line.includes('\t') ? '\t' : ',';
+    const parts = line.split(sep);
+    if (parts.length < 2) continue;
+    const rsid = parts[rsCol]?.trim().toLowerCase();
+    const geno = parts[genoCol]?.trim().toUpperCase();
+    if (rsid && rsid.startsWith('rs') && geno && /^[ACGT]{1,2}$/.test(geno)) {
+      result[rsid] = geno;
+    }
+  }
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COMPUTE DOMAIN SCORES from parsed SNPs
+// ─────────────────────────────────────────────────────────────────────────
+function computeDomainScores(snpMap) {
+  const out = {};
+  for (const domain of DOMAINS) {
+    let weightedScore = 0;
+    let totalWeight   = 0;
+    let foundCount    = 0;
+    const snpDetails  = [];
+
+    for (const [rsid, weight] of Object.entries(domain.snps)) {
+      const geno  = snpMap[rsid];
+      const score = scoreGeno(rsid, geno);
+      snpDetails.push({ rsid, geno: geno || null, score });
+      if (score !== null) {
+        weightedScore += score * weight;
+        totalWeight   += weight * 2; // max per SNP is 2
+        foundCount++;
+      }
+    }
+
+    const raw100 = totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : null;
+    const cls    = raw100 !== null ? classifyDomain(raw100) : null;
+    out[domain.id] = { score: raw100, cls, foundCount, snpDetails };
+  }
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────
+let snpMap   = null;
+let ouraData = null;
+let deepChart, totalChart;
+let domainScores = null;
+
+// ─────────────────────────────────────────────────────────────────────────
+// DNA FILE LOAD
+// ─────────────────────────────────────────────────────────────────────────
+function loadDNA(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      snpMap = parseDNAFile(e.target.result);
+      const found = Object.keys(snpMap).length;
+      // Count how many dashboard SNPs are present
+      const relevant = Object.keys(SNP_DB).filter(r => snpMap[r]);
+
+      document.getElementById('dna-zone').classList.toggle('loaded', relevant.length > 0);
+      document.getElementById('dna-zone').classList.toggle('loaded-warn', relevant.length === 0);
+      document.getElementById('dna-name').textContent = '✓ ' + file.name;
+
+      // Populate SNP summary panel
+      renderSNPSummary(relevant);
+      setStatus(relevant.length > 0
+        ? `${relevant.length}/${Object.keys(SNP_DB).length} target SNPs found — click Analyse`
+        : 'File loaded but no target SNPs found — check format', relevant.length > 0 ? 'ok' : 'err');
+    } catch(e) {
+      setStatus('Could not read file: ' + e.message, 'err');
+    }
   };
+  reader.readAsText(file);
+}
 
-  let ouraData = null;
-  let deepChart = null;
-  let totalChart = null;
+function renderSNPSummary(foundRsIds) {
+  const foundSet = new Set(foundRsIds);
+  const wrap = document.getElementById('snp-summary');
+  const rows = document.getElementById('snp-rows');
+  wrap.style.display = 'block';
+  rows.innerHTML = Object.entries(SNP_DB).map(([rsid, def]) => {
+    const geno  = snpMap[rsid] || null;
+    const score = geno ? scoreGeno(rsid, geno) : null;
+    const cls   = score !== null ? ['dot-0','dot-1','dot-2'][score] : 'dot-na';
+    return `<div class="snp-row">
+      <div class="snp-gene">${def.gene}</div>
+      <div class="snp-geno">${geno ? normGeno(geno) : '—'}</div>
+      <div class="snp-dot ${cls}"></div>
+      <div class="snp-label">${score !== null ? ['0 · challenge','1 · neutral','2 · advantage'][score] : 'not found'}</div>
+    </div>`;
+  }).join('');
+}
 
-  // ── Demo labels ───────────────────────────────────────────────────────────
-  function demoLabels() {
-    const out = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      out.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
-    }
-    return out;
+// ─────────────────────────────────────────────────────────────────────────
+// OURA FILE LOAD
+// ─────────────────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const hdr = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+  return lines.slice(1).filter(l => l.trim()).map(l => {
+    const v = l.split(',').map(x => x.trim().replace(/"/g,''));
+    const o = {}; hdr.forEach((h,i) => { o[h] = v[i]; }); return o;
+  });
+}
+function parseXLSX(buf) {
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval: null });
+  return rows.map(r => { const o={}; for(const k of Object.keys(r)) o[k.toLowerCase().trim()]=r[k]; return o; });
+}
+
+function loadOura(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const isXL = /\.(xlsx|xls)$/i.test(file.name);
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const rows = isXL ? parseXLSX(e.target.result) : parseCSV(e.target.result);
+      const dk = Object.keys(rows[0]||{}).find(k=>['date','day','summary_date'].includes(k));
+      if (!dk) { setStatus('No date column found in Oura file','err'); return; }
+      rows.sort((a,b)=>String(a[dk]).localeCompare(String(b[dk])));
+      const recent = rows.slice(-30);
+      const fmt = r => { const d=new Date(r[dk]); return isNaN(d)?r[dk]:d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
+      const col = (r,...ns) => { for(const n of ns){const v=r[n]??r[n.toLowerCase()]; if(v!==null&&v!==undefined&&v!=='')return parseFloat(v)||null;} return null; };
+      ouraData = {
+        labels:      recent.map(fmt),
+        deepScores:  recent.map(r=>col(r,'deep sleep score','deep_sleep_score','deep')),
+        totalScores: recent.map(r=>col(r,'total sleep score','total_sleep_score','score','sleep_score')),
+        remScores:   recent.map(r=>col(r,'rem sleep score','rem_sleep_score','rem')),
+        effScores:   recent.map(r=>col(r,'sleep efficiency score','sleep_efficiency_score','efficiency'))
+      };
+      document.getElementById('oura-zone').classList.add('loaded');
+      document.getElementById('oura-name').textContent = '✓ ' + file.name;
+      setStatus('Oura file loaded — click Analyse', 'ok');
+    } catch(e) { setStatus('Could not read Oura file: '+e.message,'err'); }
+  };
+  if (isXL) reader.readAsArrayBuffer(file); else reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ANALYSE — run algorithm + update visuals
+// ─────────────────────────────────────────────────────────────────────────
+function analyse() {
+  if (!snpMap) { setStatus('Upload your genetic file first', 'err'); return; }
+
+  domainScores = computeDomainScores(snpMap);
+  renderBarChart(domainScores);
+  updateTiles(domainScores);
+  updateLineCharts(domainScores);
+  setStatus('Analysis complete ✓', 'ok');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// RENDER: polygenic bar rows
+// ─────────────────────────────────────────────────────────────────────────
+function renderBarChart(scores) {
+  // Sort by score descending
+  const sorted = DOMAINS
+    .map(d => ({ ...d, result: scores[d.id] }))
+    .sort((a,b) => (b.result.score??-1) - (a.result.score??-1));
+
+  const barColors = { high: 'var(--bar-high)', med: 'var(--bar-med)', low: 'var(--bar-low)' };
+  const chipClass = { high: 'chip-high', med: 'chip-med', low: 'chip-low' };
+
+  document.getElementById('bar-rows').innerHTML = sorted.map(d => {
+    const r = d.result;
+    const pct = r.score ?? 0;
+    const cls = r.cls || 'low';
+    return `<div class="bar-row">
+      <div class="bar-domain">${d.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barColors[cls]}"></div></div>
+      <div class="bar-score">${r.score ?? '—'}</div>
+      <div class="bar-chip ${chipClass[cls]}">${labelFor(cls)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// RENDER: tiles
+// ─────────────────────────────────────────────────────────────────────────
+function last(arr) { return [...arr].reverse().find(v=>v!==null)??'—'; }
+function tagHTML(val, lo, hi) {
+  const n = parseFloat(val);
+  if (isNaN(n)||val==='—') return '';
+  if (n > hi) return '<div class="tile-tag tag-above">ABOVE RANGE</div>';
+  if (n < lo) return '<div class="tile-tag tag-below">BELOW RANGE</div>';
+  return '<div class="tile-tag tag-within">WITHIN RANGE</div>';
+}
+
+function updateTiles(scores) {
+  // Predicted deep sleep range
+  const deep = scores['deep'];
+  const domain = DOMAINS.find(d=>d.id==='deep');
+  const [dLo, dHi] = deep.cls ? rangeFor(domain, deep.cls) || ['—','—'] : ['—','—'];
+  document.getElementById('t-pred').textContent = deep.score !== null ? `${dLo}–${dHi}` : '—';
+  document.getElementById('t-pred-basis').textContent =
+    deep.score !== null ? `score ${deep.score}/100 · ${deep.foundCount} SNPs · ${labelFor(deep.cls)}` : '';
+
+  // Cortisol label
+  const cort = scores['cortisol'];
+  document.getElementById('t-cortisol').textContent =
+    cort.cls === 'high' ? 'Well-regulated' :
+    cort.cls === 'med'  ? 'Moderate' :
+    cort.cls === 'low'  ? 'Elevated reactivity' : '—';
+
+  // Oura actuals
+  if (ouraData) {
+    const deepA = last(ouraData.deepScores);
+    const effA  = last(ouraData.effScores);
+    document.getElementById('t-deep').textContent  = deepA;
+    document.getElementById('t-total').textContent = last(ouraData.totalScores);
+    document.getElementById('t-rem').textContent   = last(ouraData.remScores);
+    document.getElementById('t-eff').textContent   = effA;
+    document.getElementById('t-deep-tag').innerHTML = tagHTML(deepA, dLo, dHi);
+    // Efficiency range
+    const effD = DOMAINS.find(d=>d.id==='total'); // use total as proxy for efficiency tile
+    const eff = scores['total'];
+    const [eLo, eHi] = eff.cls ? rangeFor(effD, eff.cls)||['—','—'] : ['—','—'];
+    document.getElementById('t-eff-tag').innerHTML = tagHTML(effA, eLo, eHi);
   }
+}
 
-  // ── Build chart ───────────────────────────────────────────────────────────
-  function buildChart(id, labels, actual, lo, hi, yLabel, color) {
-    return new Chart(document.getElementById(id), {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Genetic upper range', data: labels.map(() => hi), borderColor: 'rgba(100,149,237,0.35)', borderDash: [4,3], borderWidth: 1.5, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(100,149,237,0.07)' },
-          { label: 'Genetic lower range', data: labels.map(() => lo), borderColor: 'rgba(100,149,237,0.35)', borderDash: [4,3], borderWidth: 1.5, pointRadius: 0, fill: false },
-          { label: 'Your data', data: actual, borderColor: color, backgroundColor: color.replace('1)', '0.06)'), borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, fill: false }
-        ]
+// ─────────────────────────────────────────────────────────────────────────
+// CHARTS
+// ─────────────────────────────────────────────────────────────────────────
+function demoLabels() {
+  const out=[];
+  for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);out.push(d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}));}
+  return out;
+}
+
+function buildChart(id, labels, actual, lo, hi, yLabel, lineCol) {
+  return new Chart(document.getElementById(id), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'Genetic upper', data:labels.map(()=>hi), borderColor:'rgba(99,149,237,0.35)', borderDash:[4,3], borderWidth:1.5, pointRadius:0, fill:'+1', backgroundColor:'rgba(99,149,237,0.09)' },
+        { label:'Genetic lower', data:labels.map(()=>lo), borderColor:'rgba(99,149,237,0.35)', borderDash:[4,3], borderWidth:1.5, pointRadius:0, fill:false },
+        { label:'Your data', data:actual, borderColor:lineCol, backgroundColor:lineCol.replace('1)','0.06)'), borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:0.3, fill:false }
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:10}}},
+        tooltip:{mode:'index',intersect:false}
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } }, tooltip: { mode: 'index', intersect: false } },
-        scales: {
-          x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
-          y: { min: 0, max: 100, ticks: { font: { size: 10 } }, title: { display: true, text: yLabel, font: { size: 10 }, color: '#aaa' } }
-        }
+      scales:{
+        x:{ticks:{maxTicksLimit:8,font:{size:10}}},
+        y:{min:0,max:100,ticks:{font:{size:10,family:"'JetBrains Mono',monospace"}},
+           title:{display:true,text:yLabel,font:{size:10},color:'#6b7280'}}
       }
-    });
-  }
-
-  function initCharts() {
-    const labels = demoLabels();
-    const demoDeep  = labels.map((_, i) => Math.round(60 + Math.sin(i/4)*10 + (Math.random()-0.5)*8));
-    const demoTotal = labels.map((_, i) => Math.round(72 + Math.sin(i/5)*8  + (Math.random()-0.5)*6));
-    deepChart  = buildChart('deep-chart',  labels, demoDeep,  45, 72, 'Deep Sleep Score', 'rgba(192,57,43,1)');
-    totalChart = buildChart('total-chart', labels, demoTotal, 55, 85, 'Total Sleep Score', 'rgba(41,128,185,1)');
-  }
-
-  function updateChart(chart, labels, actual, lo, hi) {
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = labels.map(() => hi);
-    chart.data.datasets[1].data = labels.map(() => lo);
-    chart.data.datasets[2].data = actual;
-    chart.update();
-  }
-
-  // ── File parsers ──────────────────────────────────────────────────────────
-  function parseCSV(text) {
-    const lines = text.trim().split('\n');
-    const header = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
-    return lines.slice(1).filter(l => l.trim()).map(line => {
-      const vals = line.split(',').map(v => v.trim().replace(/"/g, ''));
-      const obj = {};
-      header.forEach((h, i) => { obj[h] = vals[i]; });
-      return obj;
-    });
-  }
-
-  function parseExcel(arrayBuffer) {
-    const wb = XLSX.read(arrayBuffer, { type: 'array' });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet, { defval: null });
-    return json.map(row => {
-      const out = {};
-      for (const k of Object.keys(row)) out[k.toLowerCase().trim()] = row[k];
-      return out;
-    });
-  }
-
-  function handleFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const isExcel = /\.(xlsx|xls)$/i.test(file.name);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        let rows = isExcel ? parseExcel(e.target.result) : parseCSV(e.target.result);
-
-        // Find date key
-        const dateKey = Object.keys(rows[0] || {}).find(k => k === 'date' || k === 'day' || k === 'summary_date');
-        if (!dateKey) { setStatus('Could not find a date column in this file', 'error'); return; }
-
-        // Sort ascending, take last 30
-        rows.sort((a, b) => String(a[dateKey]).localeCompare(String(b[dateKey])));
-        const recent = rows.slice(-30);
-
-        const fmt = r => {
-          const d = new Date(r[dateKey]);
-          return isNaN(d) ? r[dateKey] : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-        };
-
-        const col = (r, ...names) => {
-          for (const n of names) {
-            const v = r[n] ?? r[n.toLowerCase()];
-            if (v !== null && v !== undefined && v !== '') return parseFloat(v) || null;
-          }
-          return null;
-        };
-
-        ouraData = {
-          labels:      recent.map(fmt),
-          deepScores:  recent.map(r => col(r, 'deep sleep score', 'deep_sleep_score', 'deep')),
-          totalScores: recent.map(r => col(r, 'total sleep score', 'total_sleep_score', 'score', 'sleep_score')),
-          remScores:   recent.map(r => col(r, 'rem sleep score', 'rem_sleep_score', 'rem')),
-          effScores:   recent.map(r => col(r, 'sleep efficiency score', 'sleep_efficiency_score', 'efficiency'))
-        };
-
-        document.getElementById('upload-box').classList.add('has-file');
-        document.getElementById('upload-label').textContent = '✓ ' + file.name;
-        setStatus('File loaded — click Analyze to update charts', 'success');
-      } catch(err) {
-        setStatus('Could not read file: ' + err.message, 'error');
-        console.error(err);
-      }
-    };
-    if (isExcel) reader.readAsArrayBuffer(file); else reader.readAsText(file);
-  }
-
-  function setStatus(msg, type='') {
-    const el = document.getElementById('status-msg');
-    el.textContent = msg;
-    el.className = 'status-msg' + (type ? ' ' + type : '');
-  }
-
-  function last(arr) { return [...arr].reverse().find(v => v !== null) ?? '—'; }
-
-  // ── Main analyze ──────────────────────────────────────────────────────────
-  function analyze() {
-    const deepGene  = document.getElementById('g-deep-sleep').value;
-    const effGene   = document.getElementById('g-efficiency').value;
-    const cortisol  = document.getElementById('g-cortisol').value;
-
-    const [dLo, dHi] = geneticRanges.deepSleep[deepGene];
-    const [eLo, eHi] = geneticRanges.efficiency[effGene];
-    const cortisolMap = { high: 'High', moderate: 'Moderate', low: 'Low' };
-
-    document.getElementById('tile-deep-pred').textContent = `${dLo}–${dHi}`;
-    document.getElementById('tile-stress').textContent    = cortisolMap[cortisol];
-
-    if (ouraData) {
-      const { labels, deepScores, totalScores, remScores, effScores } = ouraData;
-
-      updateChart(deepChart,  labels, deepScores,  dLo, dHi);
-      updateChart(totalChart, labels, totalScores, 55, 85);
-
-      document.getElementById('tile-deep-actual').textContent  = last(deepScores);
-      document.getElementById('tile-total-score').textContent  = last(totalScores);
-      document.getElementById('tile-rem').textContent          = last(remScores);
-      document.getElementById('tile-efficiency').textContent   = last(effScores);
-
-      document.getElementById('badge-deep').classList.add('show');
-      document.getElementById('badge-total').classList.add('show');
-      setStatus('Charts updated with your Oura data ✓', 'success');
-    } else {
-      // Just update ranges on demo data
-      deepChart.data.datasets[0].data  = deepChart.data.labels.map(() => dHi);
-      deepChart.data.datasets[1].data  = deepChart.data.labels.map(() => dLo);
-      deepChart.update();
-      setStatus('Upload your Oura file to see real data');
     }
-  }
+  });
+}
 
-  initCharts();
+function initCharts() {
+  const lbl  = demoLabels();
+  const demo1 = lbl.map((_,i)=>Math.round(52+Math.sin(i/4)*10+(Math.random()-.5)*8));
+  const demo2 = lbl.map((_,i)=>Math.round(68+Math.sin(i/5)*8 +(Math.random()-.5)*6));
+  deepChart  = buildChart('chart-deep',  lbl, demo1, 38, 68, 'Deep Sleep Score', 'rgba(220,38,38,1)');
+  totalChart = buildChart('chart-total', lbl, demo2, 48, 75, 'Total Sleep Score', 'rgba(37,99,235,1)');
+}
+
+function updateLineCharts(scores) {
+  const deepD  = DOMAINS.find(d=>d.id==='deep');
+  const totalD = DOMAINS.find(d=>d.id==='total');
+  const ds = scores['deep'];
+  const ts = scores['total'];
+
+  const [dLo,dHi] = ds.cls ? rangeFor(deepD, ds.cls)||[38,68] : [38,68];
+  const [tLo,tHi] = ts.cls ? rangeFor(totalD, ts.cls)||[48,75] : [48,75];
+
+  if (ouraData) {
+    const { labels, deepScores, totalScores } = ouraData;
+    deepChart.data.labels=labels; deepChart.data.datasets[0].data=labels.map(()=>dHi); deepChart.data.datasets[1].data=labels.map(()=>dLo); deepChart.data.datasets[2].data=deepScores;
+    totalChart.data.labels=labels; totalChart.data.datasets[0].data=labels.map(()=>tHi); totalChart.data.datasets[1].data=labels.map(()=>tLo); totalChart.data.datasets[2].data=totalScores;
+    document.getElementById('badge-deep').classList.add('on');
+    document.getElementById('badge-total').classList.add('on');
+  } else {
+    deepChart.data.datasets[0].data=deepChart.data.labels.map(()=>dHi);
+    deepChart.data.datasets[1].data=deepChart.data.labels.map(()=>dLo);
+    totalChart.data.datasets[0].data=totalChart.data.labels.map(()=>tHi);
+    totalChart.data.datasets[1].data=totalChart.data.labels.map(()=>tLo);
+  }
+  deepChart.update(); totalChart.update();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────
+function setStatus(msg, type='') {
+  const el=document.getElementById('status');
+  el.textContent=msg;
+  el.className='status-line'+(type?' '+type:'');
+}
+
+initCharts();
 </script>
-</body>
-</html>
