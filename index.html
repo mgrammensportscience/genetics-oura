@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Genotype vs Phenotype</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #edeae3; font-family: 'Inter', sans-serif; color: #1a1a1a; font-size: 14px; }
@@ -83,10 +84,10 @@
       </div>
 
       <label class="upload-box" id="upload-box" for="file-input">
-        <input type="file" id="file-input" accept=".csv" onchange="handleFile(event)">
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
         <div class="upload-icon">📂</div>
-        <div class="upload-label" id="upload-label">Upload sleep.csv</div>
-        <div class="upload-sub">from your Oura data export</div>
+        <div class="upload-label" id="upload-label">Upload your sleep file</div>
+        <div class="upload-sub">.xlsx, .xls or .csv accepted</div>
       </label>
 
       <hr class="divider">
@@ -257,7 +258,7 @@
     sleepChart.update();
   }
 
-  // ── CSV parser ────────────────────────────────────────────────────────────
+  // ── File parser (Excel + CSV) ─────────────────────────────────────────────
   function parseCSV(text) {
     const lines = text.trim().split('\n');
     const header = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
@@ -269,13 +270,26 @@
     });
   }
 
+  function parseExcel(arrayBuffer) {
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet, { defval: null });
+    // Normalise keys to lowercase
+    return json.map(row => {
+      const out = {};
+      for (const k of Object.keys(row)) out[k.toLowerCase().trim()] = row[k];
+      return out;
+    });
+  }
+
   function handleFile(event) {
     const file = event.target.files[0];
     if (!file) return;
+    const isExcel = /\.(xlsx|xls)$/i.test(file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const rows = parseCSV(e.target.result);
+        const rows = isExcel ? parseExcel(e.target.result) : parseCSV(e.target.result);
 
         // Sort by date, take last 30
         rows.sort((a, b) => {
@@ -316,7 +330,8 @@
         setStatus('Could not read file: ' + err.message, 'error');
       }
     };
-    reader.readAsText(file);
+    if (isExcel) reader.readAsArrayBuffer(file);
+    else reader.readAsText(file);
   }
 
   function setStatus(msg, type='') {
