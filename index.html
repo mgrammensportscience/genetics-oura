@@ -21,18 +21,13 @@
     .input-group { margin-bottom: 14px; }
     .input-group label { display: block; font-size: 11px; font-weight: 600; color: #555; margin-bottom: 5px; }
     .input-group select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 13px; color: #1a1a1a; appearance: none; }
-    .upload-box {
-      border: 2px dashed #ddd; border-radius: 8px; padding: 16px; text-align: center;
-      cursor: pointer; transition: border-color 0.2s; background: #fafafa; margin-bottom: 8px;
-    }
+    .upload-box { border: 2px dashed #ddd; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; background: #fafafa; margin-bottom: 8px; }
     .upload-box:hover { border-color: #c0392b; }
     .upload-box.has-file { border-color: #27ae60; background: #f0faf4; }
     .upload-box input[type="file"] { display: none; }
     .upload-icon { font-size: 24px; margin-bottom: 6px; }
     .upload-label { font-size: 12px; font-weight: 600; color: #555; }
     .upload-sub { font-size: 10px; color: #aaa; margin-top: 3px; }
-    .upload-hint { font-size: 10px; color: #aaa; line-height: 1.5; margin-bottom: 12px; }
-    .upload-hint a { color: #c0392b; text-decoration: none; }
     .analyze-btn { width: 100%; margin-top: 10px; padding: 11px; background: #c0392b; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.04em; }
     .analyze-btn:hover { background: #a93226; }
     .status-msg { font-size: 11px; color: #888; margin-top: 10px; text-align: center; min-height: 16px; }
@@ -44,7 +39,7 @@
     .tile-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #888; margin-bottom: 10px; }
     .tile-dark .tile-label { color: #aaa; }
     .tile-value { font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
-    .tile-unit { font-size: 16px; font-weight: 500; color: #888; }
+    .tile-unit { font-size: 14px; font-weight: 500; color: #888; }
     .tile-accent { color: #c0392b; }
     .tile-sub { font-size: 11px; color: #888; }
     .tile-dark .tile-sub { color: #777; }
@@ -57,7 +52,6 @@
     .steps-box h4 { font-size: 11px; font-weight: 700; color: #c0392b; margin-bottom: 8px; letter-spacing: 0.06em; }
     .steps-box ol { padding-left: 16px; }
     .steps-box li { font-size: 11px; color: #555; margin-bottom: 5px; line-height: 1.5; }
-    .steps-box li a { color: #c0392b; }
   </style>
 </head>
 <body>
@@ -69,7 +63,6 @@
   </header>
   <div class="app-body">
     <aside class="left-panel">
-
       <div class="section-title">OURA DATA</div>
       <div class="steps-box">
         <h4>HOW TO EXPORT YOUR DATA</h4>
@@ -78,15 +71,14 @@
           <li>Go to <strong>Profile → Settings → Data Export</strong></li>
           <li>Tap <strong>Request Data Export</strong></li>
           <li>You'll get an email with a <strong>.zip file</strong></li>
-          <li>Unzip it and find <strong>sleep.csv</strong></li>
-          <li>Upload it below ↓</li>
+          <li>Find your sleep Excel or CSV file and upload below ↓</li>
         </ol>
       </div>
 
       <label class="upload-box" id="upload-box" for="file-input">
         <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
         <div class="upload-icon">📂</div>
-        <div class="upload-label" id="upload-label">Upload your sleep file</div>
+        <div class="upload-label" id="upload-label">Upload your Oura file</div>
         <div class="upload-sub">.xlsx, .xls or .csv accepted</div>
       </label>
 
@@ -110,8 +102,8 @@
         </select>
       </div>
       <div class="input-group">
-        <label>HRV potential</label>
-        <select id="g-hrv">
+        <label>Sleep efficiency</label>
+        <select id="g-efficiency">
           <option value="challenge">Challenge</option>
           <option value="typical" selected>Typical</option>
           <option value="advantage">Advantage</option>
@@ -130,70 +122,70 @@
     </aside>
 
     <main class="right-panel">
+      <!-- Row 1: Sleep scores -->
       <div class="tiles-row">
         <div class="tile tile-dark">
-          <div class="tile-label">PREDICTED DEEP SLEEP</div>
-          <div class="tile-value" id="tile-sleep-pred">75 <span class="tile-unit">min</span></div>
-          <div class="tile-sub">based on your genetics</div>
+          <div class="tile-label">PREDICTED DEEP SLEEP SCORE</div>
+          <div class="tile-value" id="tile-deep-pred">55–75</div>
+          <div class="tile-sub">genetic range · score /100</div>
         </div>
         <div class="tile">
-          <div class="tile-label">ACTUAL DEEP SLEEP</div>
-          <div class="tile-value tile-accent" id="tile-sleep-actual">— <span class="tile-unit">min</span></div>
-          <div class="tile-sub">last night · Oura Ring</div>
+          <div class="tile-label">ACTUAL DEEP SLEEP SCORE</div>
+          <div class="tile-value tile-accent" id="tile-deep-actual">—</div>
+          <div class="tile-sub">most recent · Oura Ring</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">TOTAL SLEEP SCORE</div>
+          <div class="tile-value" id="tile-total-score">—</div>
+          <div class="tile-sub">most recent · Oura Ring</div>
+        </div>
+      </div>
+      <!-- Row 2: Other scores -->
+      <div class="tiles-row">
+        <div class="tile">
+          <div class="tile-label">REM SLEEP SCORE</div>
+          <div class="tile-value tile-accent" id="tile-rem">—</div>
+          <div class="tile-sub">most recent · Oura Ring</div>
+        </div>
+        <div class="tile tile-dark">
+          <div class="tile-label">SLEEP EFFICIENCY SCORE</div>
+          <div class="tile-value" id="tile-efficiency">—</div>
+          <div class="tile-sub">most recent · Oura Ring</div>
         </div>
         <div class="tile">
           <div class="tile-label">STRESS PROFILE</div>
           <div class="tile-value" id="tile-stress">Moderate</div>
-          <div class="tile-sub">cortisol reactivity</div>
-        </div>
-      </div>
-      <div class="tiles-row">
-        <div class="tile">
-          <div class="tile-label">PREDICTED HRV RANGE</div>
-          <div class="tile-value" id="tile-hrv-pred">38–68 <span class="tile-unit" style="font-size:13px">ms</span></div>
-          <div class="tile-sub">genetic range · RMSSD</div>
-        </div>
-        <div class="tile tile-dark">
-          <div class="tile-label">ACTUAL HRV (LAST NIGHT)</div>
-          <div class="tile-value tile-accent" id="tile-hrv-actual">— <span class="tile-unit">ms</span></div>
-          <div class="tile-sub">RMSSD · Oura Ring</div>
-        </div>
-        <div class="tile">
-          <div class="tile-label">SLEEP SCORE</div>
-          <div class="tile-value" id="tile-score">—</div>
-          <div class="tile-sub">Oura Ring · last night</div>
+          <div class="tile-sub">cortisol reactivity · genetics</div>
         </div>
       </div>
 
       <div class="chart-card">
-        <div class="chart-title">HRV Trend — Genetic range vs your data <span class="live-badge" id="live-badge">YOUR DATA</span></div>
-        <div class="chart-sub">Last 30 days · RMSSD (ms)</div>
-        <canvas id="hrv-chart"></canvas>
+        <div class="chart-title">Deep Sleep Score — Genetic range vs your data <span class="live-badge" id="badge-deep">YOUR DATA</span></div>
+        <div class="chart-sub">Last 30 entries · score out of 100</div>
+        <canvas id="deep-chart"></canvas>
       </div>
 
       <div class="chart-card">
-        <div class="chart-title">Deep Sleep — Genetic prediction vs actual <span class="live-badge" id="sleep-badge">YOUR DATA</span></div>
-        <div class="chart-sub">Last 30 days · minutes</div>
-        <canvas id="sleep-chart"></canvas>
+        <div class="chart-title">Total Sleep Score — Trend <span class="live-badge" id="badge-total">YOUR DATA</span></div>
+        <div class="chart-sub">Last 30 entries · score out of 100</div>
+        <canvas id="total-chart"></canvas>
       </div>
     </main>
   </div>
 </div>
 
 <script>
-  // ── Genetic ranges ────────────────────────────────────────────────────────
+  // ── Genetic score ranges (0–100) ──────────────────────────────────────────
   const geneticRanges = {
-    hrv:   { challenge: [20,45], typical: [38,68], advantage: [55,90] },
-    sleep: { challenge: [35,60], typical: [52,85], advantage: [75,110] }
+    deepSleep:  { challenge: [25,50], typical: [45,72], advantage: [65,92] },
+    efficiency: { challenge: [40,62], typical: [58,80], advantage: [72,95] }
   };
 
-  // ── Parsed Oura data ──────────────────────────────────────────────────────
-  let ouraData = null; // { labels[], hrv[], deepSleep[], score[] }
+  let ouraData = null;
+  let deepChart = null;
+  let totalChart = null;
 
-  // ── Chart instances ───────────────────────────────────────────────────────
-  let hrvChart = null;
-  let sleepChart = null;
-
+  // ── Demo labels ───────────────────────────────────────────────────────────
   function demoLabels() {
     const out = [];
     for (let i = 29; i >= 0; i--) {
@@ -203,15 +195,16 @@
     return out;
   }
 
-  function buildChart(id, labels, actual, lo, hi, yLabel) {
+  // ── Build chart ───────────────────────────────────────────────────────────
+  function buildChart(id, labels, actual, lo, hi, yLabel, color) {
     return new Chart(document.getElementById(id), {
       type: 'line',
       data: {
         labels,
         datasets: [
-          { label: 'Genetic upper range', data: labels.map(() => hi), borderColor: 'rgba(100,149,237,0.4)', borderDash: [4,3], borderWidth: 1, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(100,149,237,0.08)' },
-          { label: 'Genetic lower range', data: labels.map(() => lo), borderColor: 'rgba(100,149,237,0.4)', borderDash: [4,3], borderWidth: 1, pointRadius: 0, fill: false },
-          { label: 'Your data', data: actual, borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,0.06)', borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, fill: false }
+          { label: 'Genetic upper range', data: labels.map(() => hi), borderColor: 'rgba(100,149,237,0.35)', borderDash: [4,3], borderWidth: 1.5, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(100,149,237,0.07)' },
+          { label: 'Genetic lower range', data: labels.map(() => lo), borderColor: 'rgba(100,149,237,0.35)', borderDash: [4,3], borderWidth: 1.5, pointRadius: 0, fill: false },
+          { label: 'Your data', data: actual, borderColor: color, backgroundColor: color.replace('1)', '0.06)'), borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, fill: false }
         ]
       },
       options: {
@@ -219,7 +212,7 @@
         plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } }, tooltip: { mode: 'index', intersect: false } },
         scales: {
           x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
-          y: { min: 0, ticks: { font: { size: 10 } }, title: { display: true, text: yLabel, font: { size: 10 }, color: '#aaa' } }
+          y: { min: 0, max: 100, ticks: { font: { size: 10 } }, title: { display: true, text: yLabel, font: { size: 10 }, color: '#aaa' } }
         }
       }
     });
@@ -227,42 +220,25 @@
 
   function initCharts() {
     const labels = demoLabels();
-    const demoHRV   = labels.map((_, i) => Math.round(45 + Math.sin(i/5)*8 + (Math.random()-0.5)*6));
-    const demoSleep = labels.map(() => Math.round(65 + (Math.random()-0.5)*20));
-    hrvChart   = buildChart('hrv-chart',   labels, demoHRV,   38, 68, 'RMSSD (ms)');
-    sleepChart = buildChart('sleep-chart', labels, demoSleep, 52, 85, 'Deep sleep (min)');
+    const demoDeep  = labels.map((_, i) => Math.round(60 + Math.sin(i/4)*10 + (Math.random()-0.5)*8));
+    const demoTotal = labels.map((_, i) => Math.round(72 + Math.sin(i/5)*8  + (Math.random()-0.5)*6));
+    deepChart  = buildChart('deep-chart',  labels, demoDeep,  45, 72, 'Deep Sleep Score', 'rgba(192,57,43,1)');
+    totalChart = buildChart('total-chart', labels, demoTotal, 55, 85, 'Total Sleep Score', 'rgba(41,128,185,1)');
   }
 
-  function refreshCharts(labels, actualHRV, actualSleep, lo_hrv, hi_hrv, lo_sl, hi_sl) {
-    // update ranges
-    const setRange = (chart, lo, hi) => {
-      chart.data.datasets[0].data = chart.data.labels.map(() => hi);
-      chart.data.datasets[1].data = chart.data.labels.map(() => lo);
-    };
-    // update labels + actual
-    const replaceData = (chart, newLabels, newActual) => {
-      chart.data.labels = newLabels;
-      const lo = chart.data.datasets[1].data[0] || 0;
-      const hi = chart.data.datasets[0].data[0] || 0;
-      chart.data.datasets[0].data = newLabels.map(() => hi);
-      chart.data.datasets[1].data = newLabels.map(() => lo);
-      chart.data.datasets[2].data = newActual;
-    };
-    setRange(hrvChart,   lo_hrv, hi_hrv);
-    setRange(sleepChart, lo_sl,  hi_sl);
-    if (labels) {
-      replaceData(hrvChart,   labels, actualHRV);
-      replaceData(sleepChart, labels, actualSleep);
-    }
-    hrvChart.update();
-    sleepChart.update();
+  function updateChart(chart, labels, actual, lo, hi) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = labels.map(() => hi);
+    chart.data.datasets[1].data = labels.map(() => lo);
+    chart.data.datasets[2].data = actual;
+    chart.update();
   }
 
-  // ── File parser (Excel + CSV) ─────────────────────────────────────────────
+  // ── File parsers ──────────────────────────────────────────────────────────
   function parseCSV(text) {
     const lines = text.trim().split('\n');
     const header = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
-    return lines.slice(1).map(line => {
+    return lines.slice(1).filter(l => l.trim()).map(line => {
       const vals = line.split(',').map(v => v.trim().replace(/"/g, ''));
       const obj = {};
       header.forEach((h, i) => { obj[h] = vals[i]; });
@@ -271,10 +247,9 @@
   }
 
   function parseExcel(arrayBuffer) {
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet, { defval: null });
-    // Normalise keys to lowercase
     return json.map(row => {
       const out = {};
       for (const k of Object.keys(row)) out[k.toLowerCase().trim()] = row[k];
@@ -289,91 +264,89 @@
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const rows = isExcel ? parseExcel(e.target.result) : parseCSV(e.target.result);
+        let rows = isExcel ? parseExcel(e.target.result) : parseCSV(e.target.result);
 
-        // Sort by date, take last 30
-        rows.sort((a, b) => {
-          const da = a['date'] || a['day'] || a['summary_date'] || '';
-          const db = b['date'] || b['day'] || b['summary_date'] || '';
-          return da.localeCompare(db);
-        });
+        // Find date key
+        const dateKey = Object.keys(rows[0] || {}).find(k => k === 'date' || k === 'day' || k === 'summary_date');
+        if (!dateKey) { setStatus('Could not find a date column in this file', 'error'); return; }
+
+        // Sort ascending, take last 30
+        rows.sort((a, b) => String(a[dateKey]).localeCompare(String(b[dateKey])));
         const recent = rows.slice(-30);
 
-        // Find the date column (Oura uses different names in different exports)
-        const dateKey = ['date','day','summary_date'].find(k => recent[0]?.[k]);
-        // Find HRV column
-        const hrvKey = ['average_hrv','hrv_average','rmssd'].find(k => recent[0]?.[k] !== undefined);
-        // Find deep sleep column (in seconds in some exports, minutes in others)
-        const deepKey = ['deep_sleep_duration','deep'].find(k => recent[0]?.[k] !== undefined);
-        // Find score column
-        const scoreKey = ['score','sleep_score'].find(k => recent[0]?.[k] !== undefined);
-
-        if (!dateKey) { setStatus('Could not find date column — is this sleep.csv?', 'error'); return; }
-
-        const labels = recent.map(r => {
+        const fmt = r => {
           const d = new Date(r[dateKey]);
-          return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-        });
-        const actualHRV   = recent.map(r => hrvKey   ? (parseFloat(r[hrvKey])   || null) : null);
-        const rawSleep    = recent.map(r => deepKey  ? (parseFloat(r[deepKey])  || null) : null);
-        // Oura exports deep sleep in seconds; convert if > 300 (5 hours threshold)
-        const actualSleep = rawSleep.map(v => v === null ? null : (v > 300 ? Math.round(v/60) : Math.round(v)));
-        const scores      = recent.map(r => scoreKey ? (parseFloat(r[scoreKey]) || null) : null);
+          return isNaN(d) ? r[dateKey] : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        };
 
-        ouraData = { labels, actualHRV, actualSleep, scores };
+        const col = (r, ...names) => {
+          for (const n of names) {
+            const v = r[n] ?? r[n.toLowerCase()];
+            if (v !== null && v !== undefined && v !== '') return parseFloat(v) || null;
+          }
+          return null;
+        };
 
-        // Update upload box
+        ouraData = {
+          labels:      recent.map(fmt),
+          deepScores:  recent.map(r => col(r, 'deep sleep score', 'deep_sleep_score', 'deep')),
+          totalScores: recent.map(r => col(r, 'total sleep score', 'total_sleep_score', 'score', 'sleep_score')),
+          remScores:   recent.map(r => col(r, 'rem sleep score', 'rem_sleep_score', 'rem')),
+          effScores:   recent.map(r => col(r, 'sleep efficiency score', 'sleep_efficiency_score', 'efficiency'))
+        };
+
         document.getElementById('upload-box').classList.add('has-file');
         document.getElementById('upload-label').textContent = '✓ ' + file.name;
         setStatus('File loaded — click Analyze to update charts', 'success');
       } catch(err) {
         setStatus('Could not read file: ' + err.message, 'error');
+        console.error(err);
       }
     };
-    if (isExcel) reader.readAsArrayBuffer(file);
-    else reader.readAsText(file);
+    if (isExcel) reader.readAsArrayBuffer(file); else reader.readAsText(file);
   }
 
   function setStatus(msg, type='') {
     const el = document.getElementById('status-msg');
     el.textContent = msg;
-    el.className = 'status-msg' + (type ? ' '+type : '');
+    el.className = 'status-msg' + (type ? ' ' + type : '');
   }
+
+  function last(arr) { return [...arr].reverse().find(v => v !== null) ?? '—'; }
 
   // ── Main analyze ──────────────────────────────────────────────────────────
   function analyze() {
-    const deepSleep = document.getElementById('g-deep-sleep').value;
-    const hrv       = document.getElementById('g-hrv').value;
+    const deepGene  = document.getElementById('g-deep-sleep').value;
+    const effGene   = document.getElementById('g-efficiency').value;
     const cortisol  = document.getElementById('g-cortisol').value;
 
-    const [hrvLo, hrvHi] = geneticRanges.hrv[hrv];
-    const [slLo,  slHi]  = geneticRanges.sleep[deepSleep];
-    const slMid = Math.round((slLo + slHi) / 2);
-    const cortisolMap = { high:'High', moderate:'Moderate', low:'Low' };
+    const [dLo, dHi] = geneticRanges.deepSleep[deepGene];
+    const [eLo, eHi] = geneticRanges.efficiency[effGene];
+    const cortisolMap = { high: 'High', moderate: 'Moderate', low: 'Low' };
 
-    document.getElementById('tile-sleep-pred').innerHTML = slMid + ' <span class="tile-unit">min</span>';
-    document.getElementById('tile-hrv-pred').innerHTML   = `${hrvLo}–${hrvHi} <span class="tile-unit" style="font-size:13px">ms</span>`;
-    document.getElementById('tile-stress').textContent   = cortisolMap[cortisol];
+    document.getElementById('tile-deep-pred').textContent = `${dLo}–${dHi}`;
+    document.getElementById('tile-stress').textContent    = cortisolMap[cortisol];
 
     if (ouraData) {
-      const { labels, actualHRV, actualSleep, scores } = ouraData;
-      refreshCharts(labels, actualHRV, actualSleep, hrvLo, hrvHi, slLo, slHi);
+      const { labels, deepScores, totalScores, remScores, effScores } = ouraData;
 
-      // Latest night tiles
-      const lastHRV   = [...actualHRV].reverse().find(v => v !== null);
-      const lastSleep = [...actualSleep].reverse().find(v => v !== null);
-      const lastScore = [...scores].reverse().find(v => v !== null);
+      updateChart(deepChart,  labels, deepScores,  dLo, dHi);
+      updateChart(totalChart, labels, totalScores, 55, 85);
 
-      document.getElementById('tile-hrv-actual').innerHTML   = lastHRV   ? `${Math.round(lastHRV)} <span class="tile-unit">ms</span>` : '—';
-      document.getElementById('tile-sleep-actual').innerHTML = lastSleep  ? `${lastSleep} <span class="tile-unit">min</span>` : '—';
-      document.getElementById('tile-score').textContent      = lastScore  ? lastScore : '—';
+      document.getElementById('tile-deep-actual').textContent  = last(deepScores);
+      document.getElementById('tile-total-score').textContent  = last(totalScores);
+      document.getElementById('tile-rem').textContent          = last(remScores);
+      document.getElementById('tile-efficiency').textContent   = last(effScores);
 
-      document.getElementById('live-badge').classList.add('show');
-      document.getElementById('sleep-badge').classList.add('show');
+      document.getElementById('badge-deep').classList.add('show');
+      document.getElementById('badge-total').classList.add('show');
       setStatus('Charts updated with your Oura data ✓', 'success');
     } else {
-      refreshCharts(null, null, null, hrvLo, hrvHi, slLo, slHi);
-      setStatus('Upload sleep.csv to see your real data');
+      // Just update ranges on demo data
+      deepChart.data.datasets[0].data  = deepChart.data.labels.map(() => dHi);
+      deepChart.data.datasets[1].data  = deepChart.data.labels.map(() => dLo);
+      deepChart.update();
+      setStatus('Upload your Oura file to see real data');
     }
   }
 
